@@ -1,0 +1,45 @@
+.table th {
+  background: url('../images/bg-th.png') #dddde1;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+@media (max-width: 500px) {
+  .rwd-table thead {
+    display: none;
+  }
+
+  .rwd-table,
+  .rwd-table tbody,
+  .rwd-table tr,
+  .rwd-table td {
+    display: block;
+    width: 100%;
+  }
+  .rwd-table tr {
+    margin-bottom: 15px;
+  }
+  .rwd-table td {
+    padding-left: 50%;
+    text-align: left;
+    position: relative;
+  }
+  .rwd-table td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 0;
+    width: 50%;
+    padding-left: 15px;
+    font-size: 15px;
+    font-weight: bold;
+    text-align: left;
+  }
+}
+
+@media (min-width: 768px) {
+  .w-md-25 {
+    width: 25% !important;
+  }
+}
