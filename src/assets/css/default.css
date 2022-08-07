@@ -43,3 +43,13 @@
     width: 25% !important;
   }
 }
+
+.my-page h1:first-child {
+	/*font-size: 1.2rem;*/
+	font-size: 20px;
+	position: relative;
+	left: -10px;
+	border-left: 10px solid #B0CCC6;
+	border-bottom: 1px solid whiteSmoke;
+	padding: 10px 0 10px 20px;
+}

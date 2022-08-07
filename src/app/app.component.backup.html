@@ -129,27 +129,34 @@
                       </tr>
                   </thead>
                   <tbody>
-                      <tr *ngFor="let course of myCourse?.Courses">
+                      <tr>
                           <td>
                               <input type="radio" class="btn-check" name="options-outlined" id="btn-a" autocomplete="off">
                               <label class="btn btn-outline-danger text-nowrap active" for="btn-a">申請</label>
                           </td>
-                          <td data-label="原班別">{{course.ClassName}}</td>
-                          <td data-label="課程名稱">{{course.SubjectName}}</td>
+                          <td data-label="原班別">{{myInfo?.ClassName}}</td>
+                          <td data-label="課程名稱">服務與營運管理</td>
                           <td data-label="申請補課日期">
-                            <div *ngFor="let section of myCourse.CourseSections">
-                              <div *ngIf="course.CourseID==section.RefCourseID">
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1">
-                                    <label class="form-check-label" for="inlineCheckbox1">{{section.StartTime}}</label>
-                                </div>
+                              <div class="form-check form-check-inline">
+                                  <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1" checked>
+                                  <label class="form-check-label" for="inlineCheckbox1">2/2</label>
                               </div>
-                            </div>
+                              <div class="form-check form-check-inline">
+                                  <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="option2">
+                                  <label class="form-check-label" for="inlineCheckbox2">3/2</label>
+                              </div>
+                              <div class="form-check form-check-inline">
+                                  <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="option2">
+                                  <label class="form-check-label" for="inlineCheckbox2">3/16</label>
+                              </div>
+                              <div class="form-check form-check-inline">
+                                  <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="option2" checked>
+                                  <label class="form-check-label" for="inlineCheckbox2">3/30</label>
+                              </div>
                               <div class="bg-light text-muted small p-2 mt-3">剩餘補課申請次數：2</div>
                           </td>
                           <td data-label="申請補課時間">星期六 09:00~12:40</td>
                       </tr>
-                      <!--
                       <tr>
                           <td>
                               <input type="radio" class="btn-check" name="options-outlined" id="btn-b" autocomplete="off">
@@ -178,7 +185,6 @@
                           </td>
                           <td data-label="申請補課時間">星期六 09:00~12:40</td>
                       </tr>
-                    -->
                   </tbody>
               </table>
               <div class="card card-body">

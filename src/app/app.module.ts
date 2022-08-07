@@ -3,7 +3,7 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
 
-import { AppService } from "./app.service";
+import { GadgetService } from "./gadget.service";
 import { AppComponent } from './app.component';
 
 @NgModule({
@@ -14,7 +14,7 @@ import { AppComponent } from './app.component';
     BrowserModule,
     AppRoutingModule,
   ],
-  providers: [AppService],
+  providers: [GadgetService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
