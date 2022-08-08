@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, Input, Output, EventEmitter, HostListener } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, Input, Output, EventEmitter, HostListener, Renderer2 } from '@angular/core';
 import { GadgetService } from "./gadget.service";
 
 @Component({
@@ -16,8 +16,10 @@ export class AppComponent implements OnInit {
   myCourse: any = { Courses: [], CourseSections: []};
   systemMessage: string = '';
   makeupMessage: string = '';
+  courseModal: any = {};
+  currentReason: string = '';
 
-  constructor(private gadgetService: GadgetService) {
+  constructor(private gadgetService: GadgetService, private renderer: Renderer2,) {
 
   }
 
@@ -84,17 +86,71 @@ export class AppComponent implements OnInit {
 
   //  學生修課
   async getMyCourse() {
+    this.courseModal = {};
     try {
       let request = { Request: {}};
       request.Request = {SchoolYear: this.currentSemester.SchoolYear, Semester: this.currentSemester.Semester};
       let rsp = await this.studentContract.send('default.GetCurrentCourse', request);
       this.myCourse.Courses = [].concat(rsp.Result.Course);
+      this.myCourse.Courses.forEach((course: any) => {
+        this.courseModal[course.CourseID] = {};
+        this.courseModal[course.CourseID].Selected = false;
+      });
       rsp = await this.studentContract.send('default.GetCourseSection', request);
       this.myCourse.CourseSections = [].concat(rsp.Result.CourseSection);
-      console.log(this.myCourse);
+      this.myCourse.CourseSections.forEach((section: any) => {
+        if (this.courseModal[section.RefCourseID] !== undefined) {
+          if (this.courseModal[section.RefCourseID][section.SectionID] === undefined) {
+            this.courseModal[section.RefCourseID][section.SectionID] = {};
+          }
+          this.courseModal[section.RefCourseID][section.SectionID].Selected = false;
+        }
+      });
+      // console.log(this.myCourse.CourseSections);
     } catch (ex) {
       console.log("取得「學生修課」發生錯誤! \n" + (ex));
     }
+  }
+
+  //  section click
+  sectionChange(event: any, course:any, section: any) {
+    if (event.target.checked) {
+      this.courseModal[section.RefCourseID][section.SectionID].Selected = true;
+    } else {
+      this.courseModal[section.RefCourseID][section.SectionID].Selected = false;
+    }
+    console.log(this.courseModal);
+  }
+
+  //  course click
+  courseChange(event: any, course:any) {
+    let element = document.querySelector('label[for="course-'+ course.CourseID + '"]');
+    if (!element) return;
+
+    if (event.target.checked) {
+      this.renderer.setStyle(element, "color", "#fff");
+      this.renderer.setStyle(element, "background-color", "#dc3545");
+      this.courseModal[course.CourseID].Selected = true;
+      // this.renderer.setStyle(element, "border-color", "#fff");
+    } else {
+      this.renderer.setStyle(element, "color", "#dc3545");
+      this.renderer.setStyle(element, "background-color", "#fff");
+      this.courseModal[course.CourseID].Selected = false;
+      // this.renderer.setStyle(element, "border-color", "#dc3545");
+    }
+    console.log(this.courseModal);
+  }
+
+  //  copy click
+  copy(event: any, course:any) {
+    let element = document.querySelector('textarea[id="reason-'+ course.CourseID + '"]');
+    this.currentReason = (element as HTMLTextAreaElement).value;
+  }
+
+  //  paste click
+  paste(event: any, course:any) {
+    let element = document.querySelector('textarea[id="reason-'+ course.CourseID + '"]');
+    (element as HTMLTextAreaElement).value = this.currentReason;
   }
 
   //  送出申請

@@ -124,69 +124,46 @@
                           <th></th>
                           <th>原班別</th>
                           <th>課程名稱</th>
-                          <th>申請補課日期</th>
                           <th>申請補課時間</th>
+                          <th>申請補課原因</th>
                       </tr>
                   </thead>
                   <tbody>
-                      <tr *ngFor="let course of myCourse?.Courses">
+                      <tr *ngFor="let course of myCourse?.Courses; index as i">
                           <td>
-                              <input type="radio" class="btn-check" name="options-outlined" id="btn-a" autocomplete="off">
-                              <label class="btn btn-outline-danger text-nowrap active" for="btn-a">申請</label>
+                              <input type="checkbox" class="btn-check" name="options-outlined" id="{{'course-' + course.CourseID}}" autocomplete="off" (click)="courseChange($event, course);">
+                              <label class="btn btn-outline-danger text-nowrap" for="{{'course-' + course.CourseID}}">申請</label>
                           </td>
                           <td data-label="原班別">{{course.ClassName}}</td>
                           <td data-label="課程名稱">{{course.SubjectName}}</td>
-                          <td data-label="申請補課日期">
-                            <div *ngFor="let section of myCourse.CourseSections">
+                          <td data-label="申請補課時間">
+                            <div *ngFor="let section of myCourse.CourseSections index as j">
                               <div *ngIf="course.CourseID==section.RefCourseID">
                                 <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1">
-                                    <label class="form-check-label" for="inlineCheckbox1">{{section.StartTime}}</label>
+                                    <input class="form-check-input" type="checkbox" id="{{'sectionCheckbox-' + section.SectionID}}" value="{{section.SectionID}}" (click)="sectionChange($event, course, section)">
+                                    <label class="form-check-label" for="{{'sectionCheckbox-' + section.SectionID}}">{{section.StartTime}}</label>
                                 </div>
                               </div>
                             </div>
                               <div class="bg-light text-muted small p-2 mt-3">剩餘補課申請次數：2</div>
                           </td>
-                          <td data-label="申請補課時間">星期六 09:00~12:40</td>
-                      </tr>
-                      <!--
-                      <tr>
-                          <td>
-                              <input type="radio" class="btn-check" name="options-outlined" id="btn-b" autocomplete="off">
-                              <label class="btn btn-outline-danger text-nowrap" for="btn-b">申請</label>
+                          <td data-label="申請補課原因">
+                            <div>
+                              <div><a class="btn btn-link" style="padding: 5px; font-size: 14px;" (click)="copy($event, course);">複製</a><a class="btn btn-link" style="padding: 5px; font-size: 14px;" (click)="paste($event, course);">貼上</a></div>
+                              <textarea class="form-control" rows="2" id="{{'reason-' + course.CourseID}}"></textarea>
+                            </div>
                           </td>
-                          <td data-label="原班別">P99744012</td>
-                          <td data-label="課程名稱">國際企業經營策略</td>
-                          <td data-label="申請補課日期">
-                              <div class="form-check form-check-inline">
-                                  <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1" disabled>
-                                  <label class="form-check-label" for="inlineCheckbox1">2/2</label>
-                              </div>
-                              <div class="form-check form-check-inline">
-                                  <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="option2" disabled>
-                                  <label class="form-check-label" for="inlineCheckbox2">3/2</label>
-                              </div>
-                              <div class="form-check form-check-inline">
-                                  <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="option2" disabled>
-                                  <label class="form-check-label" for="inlineCheckbox2">3/16</label>
-                              </div>
-                              <div class="form-check form-check-inline">
-                                  <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="option2" disabled>
-                                  <label class="form-check-label" for="inlineCheckbox2">3/30</label>
-                              </div>
-                              <div class="bg-light text-muted small p-2 mt-3">剩餘補課申請次數：4</div>
-                          </td>
-                          <td data-label="申請補課時間">星期六 09:00~12:40</td>
                       </tr>
-                    -->
                   </tbody>
               </table>
+              <!--
               <div class="card card-body">
                   <div class="mb-3">
                       <label class="form-label fw-semibold">補課原因<small class="ms-2 text-muted">2022/01/18</small></label>
-                      <textarea class="form-control" rows="3"></textarea>
+                      <textarea class="form-control" rows="3" #reason></textarea>
                   </div>
               </div>
+              -->
           </div>
           <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
