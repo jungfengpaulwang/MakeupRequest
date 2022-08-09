@@ -30,21 +30,41 @@
   <table class="table table-bordered rwd-table mt-3">
       <thead class="table-light">
           <tr>
-              <th>申請日期</th>
+              <th>申請時間</th>
+              <th>原班別</th>
               <th>課程名稱</th>
-              <th>申請補課日期</th>
               <th>申請補課時間</th>
+              <th>補課原因</th>
               <th>審核狀態</th>
+              <th>&nbsp;</th>
           </tr>
       </thead>
       <tbody>
-          <tr role="button" data-bs-toggle="modal" data-bs-target="#lessonsPage">
-              <td data-label="申請日期">2022/1/18</td>
-              <td data-label="課程名稱">服務與營運管理</td>
-              <td data-label="申請補課日期">2/2、3/30</td>
-              <td data-label="申請補課時間">星期六 09:00~12:40</td>
-              <td data-label="審核狀態">審核中</td>
+          <tr role="button" data-bs-toggle="modal" data-bs-target="#lessonsPage" *ngFor="let section of makeupRequestList;">
+              <td data-label="申請時間">{{section.RequestDateTime}}</td>
+              <td data-label="原班別">{{section.ClassName}}</td>
+              <td data-label="課程名稱">{{section.SubjectName}}</td>
+              <td data-label="申請補課時間">{{section.StartTime}}</td>
+              <td data-label="補課原因">{{section.Reason}}</td>
+              <td data-label="審核狀態">
+                <container-element [ngSwitch]="section.Status">
+                  <div *ngSwitchCase="-1">審核中</div>
+                  <div *ngSwitchCase="0">
+                    <div>審核通過</div>
+                    <div>
+                      <div>&nbsp;</div>
+                      <div>補課班別：02</div>
+                      <div>課程名稱：計量分析</div>
+                      <div>上課時間：2022-01-09 14:20:00</div>
+                      <div>上課教室：冠德講堂</div>
+                    </div>
+                  </div>
+                  <div *ngSwitchCase="1">審核不通過</div>
+                </container-element>
+              </td>
+              <td><a class="btn btn-link">撤銷申請</a></td>
           </tr>
+          <!--
           <tr role="button" data-bs-toggle="modal" data-bs-target="#lessonsPage">
               <td data-label="申請日期">2022/01/18</td>
               <td data-label="課程名稱">服務與營運管理</td>
@@ -56,6 +76,7 @@
                   <strong>補課班別及課程、上課教室在這顯示</strong>
               </td>
           </tr>
+          -->
       </tbody>
   </table>
 </div>
@@ -125,7 +146,6 @@
                           <th>原班別</th>
                           <th>課程名稱</th>
                           <th>申請補課時間</th>
-                          <th>申請補課原因</th>
                       </tr>
                   </thead>
                   <tbody>
@@ -147,23 +167,23 @@
                             </div>
                               <div class="bg-light text-muted small p-2 mt-3">剩餘補課申請次數：2</div>
                           </td>
+                          <!--
                           <td data-label="申請補課原因">
                             <div>
                               <div><a class="btn btn-link" style="padding: 5px; font-size: 14px;" (click)="copy($event, course);">複製</a><a class="btn btn-link" style="padding: 5px; font-size: 14px;" (click)="paste($event, course);">貼上</a></div>
                               <textarea class="form-control" rows="2" id="{{'reason-' + course.CourseID}}"></textarea>
                             </div>
                           </td>
+                          -->
                       </tr>
                   </tbody>
               </table>
-              <!--
               <div class="card card-body">
                   <div class="mb-3">
-                      <label class="form-label fw-semibold">補課原因<small class="ms-2 text-muted">2022/01/18</small></label>
+                      <label class="form-label fw-semibold">補課原因</label><!--<small class="ms-2 text-muted">2022/01/18</small>-->
                       <textarea class="form-control" rows="3" #reason></textarea>
                   </div>
               </div>
-              -->
           </div>
           <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>

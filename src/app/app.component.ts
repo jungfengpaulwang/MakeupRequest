@@ -17,6 +17,7 @@ export class AppComponent implements OnInit {
   systemMessage: string = '';
   makeupMessage: string = '';
   courseModal: any = {};
+  makeupRequestList: Array<any> = [];
   currentReason: string = '';
 
   constructor(private gadgetService: GadgetService, private renderer: Renderer2,) {
@@ -40,6 +41,7 @@ export class AppComponent implements OnInit {
     this.getMakeupMessage();
     this.getMyInfo();
     this.getMyCourse();
+    this.getMakeupRequest();
   }
 
   //  當前學年度學期
@@ -95,6 +97,7 @@ export class AppComponent implements OnInit {
       this.myCourse.Courses.forEach((course: any) => {
         this.courseModal[course.CourseID] = {};
         this.courseModal[course.CourseID].Selected = false;
+        this.courseModal[course.CourseID].Course = course;
       });
       rsp = await this.studentContract.send('default.GetCourseSection', request);
       this.myCourse.CourseSections = [].concat(rsp.Result.CourseSection);
@@ -102,15 +105,79 @@ export class AppComponent implements OnInit {
         if (this.courseModal[section.RefCourseID] !== undefined) {
           if (this.courseModal[section.RefCourseID][section.SectionID] === undefined) {
             this.courseModal[section.RefCourseID][section.SectionID] = {};
+            this.courseModal[section.RefCourseID][section.SectionID].Selected = false;
+            this.courseModal[section.RefCourseID][section.SectionID].Section = section;
           }
-          this.courseModal[section.RefCourseID][section.SectionID].Selected = false;
         }
       });
       // console.log(this.myCourse.CourseSections);
+      // console.log(this.myCourse.Courses);
     } catch (ex) {
       console.log("取得「學生修課」發生錯誤! \n" + (ex));
     }
   }
+
+  //  申請補課資訊
+ async getMakeupRequest(){
+  this.makeupRequestList = [];
+  let request = { Request: {}};
+  request.Request = {SchoolYear: this.currentSemester.SchoolYear, Semester: this.currentSemester.Semester};
+  let rsp = await this.studentContract.send('makeup_request.GetRequest', request);
+  if (rsp && rsp.Response) {
+    ([].concat(rsp.Response)).forEach((response: any)=>{
+      ([].concat([].concat(response.Response.Courses.Course))).forEach((course: any)=>{
+        ([].concat([].concat(course.Sections.Section))).forEach((sec: any)=>{
+          let section: any = {};
+          section.RequestDateTime = response.RequestDateTime;
+          section.Reason = response.Reason;
+          section.Cancel = response.Cancel;
+          section.RefCourseID = course.CourseID;
+          section.SchoolYear = course.SchoolYear;
+          section.Semester = course.Semester;
+          section.SubjectName = course.SubjectName;
+          section.ClassName = course.ClassName;
+          section.CourseType = course.CourseType;
+          section.TeacherName = course.TeacherName;
+          section.SectionID = sec.SectionID;
+          section.StartTime = sec.StartTime;
+          section.EndTime = sec.EndTime;
+          section.Place = sec.Place;
+          section.Status = -1;
+          section.MakeupInfo = {};
+          if (section.Result) {
+            section.Status = section.Result.Status;
+            if (section.Result.MakeupInfo) {
+              section.MakeupInfo = {
+                ClassName: section.MakeupInfo.ClassName,
+                SubjectName: section.MakeupInfo.SubjectName,
+                TeacherName: section.MakeupInfo.TeacherName,
+                StartTime: section.MakeupInfo.StartTime,
+                EndTime: section.MakeupInfo.EndTime,
+                Place: section.MakeupInfo.Place,
+              };
+            }
+          }
+
+          this.makeupRequestList.push(section);
+        });
+      });
+    });
+  }
+  console.log(this.makeupRequestList);
+  /*
+    <Result>
+        <MakeupInfo>
+            <ClassName>02<ClassName>
+            <SubjectName>02<SubjectName>
+            <TeacherName></TeacherName>
+            <StartTime>2022/9/1 09:00:00</StartTime>
+            <EndTime>2022/9/1 11:00:00</EndTime>
+            <Place>冠德講堂</Place>
+        </MakeupInfo>
+        <Status>1</Status>
+    </Result>
+  */
+ }
 
   //  section click
   sectionChange(event: any, course:any, section: any) {
@@ -155,6 +222,51 @@ export class AppComponent implements OnInit {
 
   //  送出申請
   async sendMakeupRequest() {
-    console.log('You send one makeup request.');
+    let m = new Date();
+    let dateString = m.getFullYear() +"/"+ (m.getMonth()+1) +"/"+ m.getDate() + " " + m.getHours() + ":" + m.getMinutes() + ":" + m.getSeconds();
+    let request: any = { Request: {
+      RequestDateTime: dateString,
+      SchoolYear: this.currentSemester.SchoolYear,
+      Semester: this.currentSemester.Semester,
+    }};
+    let content: string = '<Courses>';
+    Object.keys(this.courseModal).forEach((CourseID: string) => {
+      if (this.courseModal[CourseID].Selected) {
+        const course = this.courseModal[CourseID].Course;
+        content += '<Course>';
+        content += `<CourseID>${course.CourseID}</CourseID>`;
+        content += `<SchoolYear>${course.SchoolYear}</SchoolYear>`;
+        content += `<Semester>${course.Semester}</Semester>`;
+        content += `<ClassName>${course.ClassName}</ClassName>`;
+        content += `<SubjectName>${course.SubjectName}</SubjectName>`;
+        content += `<TeacherName>${course.TeacherName}</TeacherName>`;
+        content += `<CourseType>${course.CourseType}</CourseType>`;
+        content += `<SerialNo>${course.SerialNo}</SerialNo>`;
+        content += `<NewSubjectCode>${course.NewSubjectCode}</NewSubjectCode>`;
+        content += `<Credit>${course.Credit}</Credit>`;
+
+          content += '<Sections>';
+          Object.keys(this.courseModal[CourseID]).forEach((SectionID: string) => {
+            if (this.courseModal[CourseID][SectionID].Selected) {
+              const section = this.courseModal[CourseID][SectionID].Section;
+              content += '<Section>';
+              content += `<SectionID>${section.SectionID}</SectionID>`;
+              content += `<RefCourseID>${section.RefCourseID}</RefCourseID>`;
+              content += `<StartTime>${section.StartTime}</StartTime>`;
+              content += `<EndTime>${section.EndTime}</EndTime>`;
+              content += `<Place>${section.Place}</Place>`;
+              content += '</Section>';
+            }
+          });
+          content += '</Sections>';
+
+        content += '</Course>';
+      }
+    });
+    content += '</Courses>';
+    request.Request.Content = content;
+    console.log(request);
+    let rsp = await this.studentContract.send('makeup_request.SetRequest', request);
+    this.getMakeupRequest();
   }
 }
