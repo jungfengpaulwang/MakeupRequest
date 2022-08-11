@@ -41,7 +41,7 @@ export class AppComponent implements OnInit {
     this.getMakeupMessage();
     this.getMyInfo();
     this.getMyCourse();
-    this.getMakeupRequest();
+    //.getMakeupRequest();
   }
 
   //  當前學年度學期
@@ -186,87 +186,65 @@ export class AppComponent implements OnInit {
     } else {
       this.courseModal[section.RefCourseID][section.SectionID].Selected = false;
     }
-    console.log(this.courseModal);
+    // console.log(this.courseModal);
   }
 
-  //  course click
-  courseChange(event: any, course:any) {
-    let element = document.querySelector('label[for="course-'+ course.CourseID + '"]');
-    if (!element) return;
+  // //  course click
+  // courseChange(event: any, course:any) {
+  //   let element = document.querySelector('label[for="course-'+ course.CourseID + '"]');
+  //   if (!element) return;
 
-    if (event.target.checked) {
-      this.renderer.setStyle(element, "color", "#fff");
-      this.renderer.setStyle(element, "background-color", "#dc3545");
-      this.courseModal[course.CourseID].Selected = true;
-      // this.renderer.setStyle(element, "border-color", "#fff");
-    } else {
-      this.renderer.setStyle(element, "color", "#dc3545");
-      this.renderer.setStyle(element, "background-color", "#fff");
-      this.courseModal[course.CourseID].Selected = false;
-      // this.renderer.setStyle(element, "border-color", "#dc3545");
-    }
-    console.log(this.courseModal);
-  }
+  //   if (event.target.checked) {
+  //     this.renderer.setStyle(element, "color", "#fff");
+  //     this.renderer.setStyle(element, "background-color", "#dc3545");
+  //     this.courseModal[course.CourseID].Selected = true;
+  //     // this.renderer.setStyle(element, "border-color", "#fff");
+  //   } else {
+  //     this.renderer.setStyle(element, "color", "#dc3545");
+  //     this.renderer.setStyle(element, "background-color", "#fff");
+  //     this.courseModal[course.CourseID].Selected = false;
+  //     // this.renderer.setStyle(element, "border-color", "#dc3545");
+  //   }
+  //   console.log(this.courseModal);
+  // }
 
-  //  copy click
-  copy(event: any, course:any) {
-    let element = document.querySelector('textarea[id="reason-'+ course.CourseID + '"]');
-    this.currentReason = (element as HTMLTextAreaElement).value;
-  }
+  // //  copy click
+  // copy(event: any, course:any) {
+  //   let element = document.querySelector('textarea[id="reason-'+ course.CourseID + '"]');
+  //   this.currentReason = (element as HTMLTextAreaElement).value;
+  // }
 
-  //  paste click
-  paste(event: any, course:any) {
-    let element = document.querySelector('textarea[id="reason-'+ course.CourseID + '"]');
-    (element as HTMLTextAreaElement).value = this.currentReason;
-  }
+  // //  paste click
+  // paste(event: any, course:any) {
+  //   let element = document.querySelector('textarea[id="reason-'+ course.CourseID + '"]');
+  //   (element as HTMLTextAreaElement).value = this.currentReason;
+  // }
 
   //  送出申請
   async sendMakeupRequest() {
     let m = new Date();
     let dateString = m.getFullYear() +"/"+ (m.getMonth()+1) +"/"+ m.getDate() + " " + m.getHours() + ":" + m.getMinutes() + ":" + m.getSeconds();
-    let request: any = { Request: {
-      RequestDateTime: dateString,
-      SchoolYear: this.currentSemester.SchoolYear,
-      Semester: this.currentSemester.Semester,
-    }};
-    let content: string = '<Courses>';
+    let request: any = { Request: {Sections: []}};
     Object.keys(this.courseModal).forEach((CourseID: string) => {
-      if (this.courseModal[CourseID].Selected) {
-        const course = this.courseModal[CourseID].Course;
-        content += '<Course>';
-        content += `<CourseID>${course.CourseID}</CourseID>`;
-        content += `<SchoolYear>${course.SchoolYear}</SchoolYear>`;
-        content += `<Semester>${course.Semester}</Semester>`;
-        content += `<ClassName>${course.ClassName}</ClassName>`;
-        content += `<SubjectName>${course.SubjectName}</SubjectName>`;
-        content += `<TeacherName>${course.TeacherName}</TeacherName>`;
-        content += `<CourseType>${course.CourseType}</CourseType>`;
-        content += `<SerialNo>${course.SerialNo}</SerialNo>`;
-        content += `<NewSubjectCode>${course.NewSubjectCode}</NewSubjectCode>`;
-        content += `<Credit>${course.Credit}</Credit>`;
-
-          content += '<Sections>';
-          Object.keys(this.courseModal[CourseID]).forEach((SectionID: string) => {
-            if (this.courseModal[CourseID][SectionID].Selected) {
-              const section = this.courseModal[CourseID][SectionID].Section;
-              content += '<Section>';
-              content += `<SectionID>${section.SectionID}</SectionID>`;
-              content += `<RefCourseID>${section.RefCourseID}</RefCourseID>`;
-              content += `<StartTime>${section.StartTime}</StartTime>`;
-              content += `<EndTime>${section.EndTime}</EndTime>`;
-              content += `<Place>${section.Place}</Place>`;
-              content += '</Section>';
+      Object.keys(this.courseModal[CourseID]).forEach((SectionID: string) => {
+        if (this.courseModal[CourseID][SectionID].Selected) {
+          const section = this.courseModal[CourseID][SectionID].Section;
+          request.Request.Sections.push({ Section:
+            {
+              RequestDateTime: dateString,
+              SchoolYear: this.currentSemester.SchoolYear,
+              Semester: this.currentSemester.Semester,
+              Reason: this.currentReason,
+              RefCourseID: section.RefCourseID,
+              RefSectionID: section.SectionID,
             }
           });
-          content += '</Sections>';
-
-        content += '</Course>';
-      }
+        }
+      });
     });
-    content += '</Courses>';
-    request.Request.Content = content;
     console.log(request);
     let rsp = await this.studentContract.send('makeup_request.SetRequest', request);
-    this.getMakeupRequest();
+    console.log(rsp);
+    // this.getMakeupRequest();
   }
 }

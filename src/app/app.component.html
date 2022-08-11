@@ -142,7 +142,7 @@
               <table class="table table-bordered rwd-table mt-3">
                   <thead class="table-light">
                       <tr>
-                          <th></th>
+                          <!--<th></th>-->
                           <th>原班別</th>
                           <th>課程名稱</th>
                           <th>申請補課時間</th>
@@ -150,11 +150,13 @@
                   </thead>
                   <tbody>
                       <tr *ngFor="let course of myCourse?.Courses; index as i">
+                        <!--
                           <td>
                               <input type="checkbox" class="btn-check" name="options-outlined" id="{{'course-' + course.CourseID}}" autocomplete="off" (click)="courseChange($event, course);">
                               <label class="btn btn-outline-danger text-nowrap" for="{{'course-' + course.CourseID}}">申請</label>
                           </td>
-                          <td data-label="原班別">{{course.ClassName}}</td>
+                          -->
+                          <td data-label="班次">{{course.ClassName}}</td>
                           <td data-label="課程名稱">{{course.SubjectName}}</td>
                           <td data-label="申請補課時間">
                             <div *ngFor="let section of myCourse.CourseSections index as j">
@@ -181,7 +183,7 @@
               <div class="card card-body">
                   <div class="mb-3">
                       <label class="form-label fw-semibold">補課原因</label><!--<small class="ms-2 text-muted">2022/01/18</small>-->
-                      <textarea class="form-control" rows="3" #reason></textarea>
+                      <textarea class="form-control" rows="3" #reason [(ngModel)]="currentReason"></textarea>
                   </div>
               </div>
           </div>
