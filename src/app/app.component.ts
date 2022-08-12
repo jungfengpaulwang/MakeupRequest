@@ -1,4 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef, Input, Output, EventEmitter, HostListener, Renderer2 } from '@angular/core';
+import { count } from 'rxjs';
 import { GadgetService } from "./gadget.service";
 
 @Component({
@@ -19,9 +20,12 @@ export class AppComponent implements OnInit {
   courseModal: any = {};
   makeupRequestList: Array<any> = [];
   currentReason: string = '';
+  now: Date = new Date();
 
   constructor(private gadgetService: GadgetService, private renderer: Renderer2,) {
-
+    setInterval(() => {
+      this.now = new Date();
+    }, 1);
   }
 
   async ngOnInit() {
@@ -41,7 +45,7 @@ export class AppComponent implements OnInit {
     this.getMakeupMessage();
     this.getMyInfo();
     this.getMyCourse();
-    //.getMakeupRequest();
+    this.getMakeupRequest();
   }
 
   //  當前學年度學期
@@ -92,15 +96,15 @@ export class AppComponent implements OnInit {
     try {
       let request = { Request: {}};
       request.Request = {SchoolYear: this.currentSemester.SchoolYear, Semester: this.currentSemester.Semester};
-      let rsp = await this.studentContract.send('default.GetCurrentCourse', request);
+      let rsp = await this.studentContract.send('makeup_request.GetCurrentCourse', request);
       this.myCourse.Courses = [].concat(rsp.Result.Course);
       this.myCourse.Courses.forEach((course: any) => {
         this.courseModal[course.CourseID] = {};
         this.courseModal[course.CourseID].Selected = false;
         this.courseModal[course.CourseID].Course = course;
       });
-      rsp = await this.studentContract.send('default.GetCourseSection', request);
-      this.myCourse.CourseSections = [].concat(rsp.Result.CourseSection);
+      rsp = await this.studentContract.send('makeup_request.GetCourseSection', request);
+      this.myCourse.CourseSections = [].concat(rsp.Response);
       this.myCourse.CourseSections.forEach((section: any) => {
         if (this.courseModal[section.RefCourseID] !== undefined) {
           if (this.courseModal[section.RefCourseID][section.SectionID] === undefined) {
@@ -110,11 +114,13 @@ export class AppComponent implements OnInit {
           }
         }
       });
-      // console.log(this.myCourse.CourseSections);
-      // console.log(this.myCourse.Courses);
     } catch (ex) {
       console.log("取得「學生修課」發生錯誤! \n" + (ex));
     }
+  }
+
+  CompareNow(StartTime: string): boolean {
+    return new Date(StartTime)<new Date();
   }
 
   //  申請補課資訊
@@ -124,59 +130,39 @@ export class AppComponent implements OnInit {
   request.Request = {SchoolYear: this.currentSemester.SchoolYear, Semester: this.currentSemester.Semester};
   let rsp = await this.studentContract.send('makeup_request.GetRequest', request);
   if (rsp && rsp.Response) {
-    ([].concat(rsp.Response)).forEach((response: any)=>{
-      ([].concat([].concat(response.Response.Courses.Course))).forEach((course: any)=>{
-        ([].concat([].concat(course.Sections.Section))).forEach((sec: any)=>{
-          let section: any = {};
-          section.RequestDateTime = response.RequestDateTime;
-          section.Reason = response.Reason;
-          section.Cancel = response.Cancel;
-          section.RefCourseID = course.CourseID;
-          section.SchoolYear = course.SchoolYear;
-          section.Semester = course.Semester;
-          section.SubjectName = course.SubjectName;
-          section.ClassName = course.ClassName;
-          section.CourseType = course.CourseType;
-          section.TeacherName = course.TeacherName;
-          section.SectionID = sec.SectionID;
-          section.StartTime = sec.StartTime;
-          section.EndTime = sec.EndTime;
-          section.Place = sec.Place;
-          section.Status = -1;
-          section.MakeupInfo = {};
-          if (section.Result) {
-            section.Status = section.Result.Status;
-            if (section.Result.MakeupInfo) {
-              section.MakeupInfo = {
-                ClassName: section.MakeupInfo.ClassName,
-                SubjectName: section.MakeupInfo.SubjectName,
-                TeacherName: section.MakeupInfo.TeacherName,
-                StartTime: section.MakeupInfo.StartTime,
-                EndTime: section.MakeupInfo.EndTime,
-                Place: section.MakeupInfo.Place,
-              };
-            }
-          }
-
-          this.makeupRequestList.push(section);
-        });
+    ([].concat(rsp.Response)).forEach((r: any)=>{
+      this.makeupRequestList.push({
+        RefCourseID: r.RefCourseID,
+        RefSectionID: r.RefSectionID,
+        RequestDateTime: r.RequestDateTime,
+        ClassName: r.ClassName,
+        SubjectName: r.SubjectName,
+        SectionTime: r.StartTime.substr(0, 16) + "~" + r.EndTime.substr(11, 5),
+        Reason: r.Reason,
+        FailReason: r.FailReason,
+        Status: r.Status,
+        nClassName: r.nClassName,
+        nSubjectName: r.nSubjectName,
+        nSectionTime: r.nStartTime.substr(0, 16) + "~" + r.nEndTime.substr(11, 5),
+        nPlace: r.nPlace,
+        Cancel: r.Cancel,
       });
     });
   }
-  console.log(this.makeupRequestList);
-  /*
-    <Result>
-        <MakeupInfo>
-            <ClassName>02<ClassName>
-            <SubjectName>02<SubjectName>
-            <TeacherName></TeacherName>
-            <StartTime>2022/9/1 09:00:00</StartTime>
-            <EndTime>2022/9/1 11:00:00</EndTime>
-            <Place>冠德講堂</Place>
-        </MakeupInfo>
-        <Status>1</Status>
-    </Result>
-  */
+ }
+
+ getMakeupCount(course: any): number {
+    let count: number = 4;
+
+    this.myCourse.CourseSections.forEach((section: any) => {
+      if (section.RefCourseID == course.CourseID) {
+        if (section.isMakeup) {
+          count -= 1;
+        }
+      }
+    });
+
+    return count;
  }
 
   //  section click
@@ -186,7 +172,6 @@ export class AppComponent implements OnInit {
     } else {
       this.courseModal[section.RefCourseID][section.SectionID].Selected = false;
     }
-    // console.log(this.courseModal);
   }
 
   // //  course click
@@ -219,9 +204,23 @@ export class AppComponent implements OnInit {
   //   let element = document.querySelector('textarea[id="reason-'+ course.CourseID + '"]');
   //   (element as HTMLTextAreaElement).value = this.currentReason;
   // }
-
+  async revoke(section: any) {
+    let request = { Request: {}};
+    request.Request = {
+      SchoolYear: this.currentSemester.SchoolYear,
+      Semester: this.currentSemester.Semester,
+      RefCourseID: section.RefCourseID,
+      RefSectionID: section.RefSectionID,
+    };
+    let rsp = await this.studentContract.send('makeup_request.RevokeMakeup', request);
+    this.getMakeupRequest();
+  }
   //  送出申請
   async sendMakeupRequest() {
+    if (this.currentReason.trim() == '') {
+      alert('請填寫補課原因');
+      return;
+    }
     let m = new Date();
     let dateString = m.getFullYear() +"/"+ (m.getMonth()+1) +"/"+ m.getDate() + " " + m.getHours() + ":" + m.getMinutes() + ":" + m.getSeconds();
     let request: any = { Request: {Sections: []}};
@@ -242,9 +241,11 @@ export class AppComponent implements OnInit {
         }
       });
     });
-    console.log(request);
+    if (request.Request.Sections.length == 0) {
+      alert('請勾選申請補課時間');
+      return;
+    }
     let rsp = await this.studentContract.send('makeup_request.SetRequest', request);
-    console.log(rsp);
-    // this.getMakeupRequest();
+    this.getMakeupRequest();
   }
 }

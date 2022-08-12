@@ -1,15 +1,6 @@
 <div class="container">
-  <!-- <div class="header">
-      <img class="logo" src="src/logo.jpg">
-      <span class="link">
-          <a href="http://web.ischool.com.tw/main.htm#menu" target="_blank">回myEMBA首頁</a>
-          <a href="http://web.emba.ntu.edu.tw" target="_blank">台大EMBA官網</a>
-      </span>
-  </div> -->
   <nav style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;);" aria-label="breadcrumb">
       <ol class="breadcrumb py-2">
-          <!--<li class="breadcrumb-item"><a href="#">首頁</a></li>
-          <li class="breadcrumb-item active" aria-current="page">線上補課系統</li>-->
           <h1>補課申請</h1>
       </ol>
   </nav>
@@ -31,7 +22,7 @@
       <thead class="table-light">
           <tr>
               <th>申請時間</th>
-              <th>原班別</th>
+              <th>開課班次</th>
               <th>課程名稱</th>
               <th>申請補課時間</th>
               <th>補課原因</th>
@@ -40,43 +31,29 @@
           </tr>
       </thead>
       <tbody>
-          <tr role="button" data-bs-toggle="modal" data-bs-target="#lessonsPage" *ngFor="let section of makeupRequestList;">
+          <tr *ngFor="let section of makeupRequestList;">
               <td data-label="申請時間">{{section.RequestDateTime}}</td>
-              <td data-label="原班別">{{section.ClassName}}</td>
+              <td data-label="開課班次">{{section.ClassName}}</td>
               <td data-label="課程名稱">{{section.SubjectName}}</td>
-              <td data-label="申請補課時間">{{section.StartTime}}</td>
+              <td data-label="申請補課時間">{{section.SectionTime}}</td>
               <td data-label="補課原因">{{section.Reason}}</td>
               <td data-label="審核狀態">
                 <container-element [ngSwitch]="section.Status">
-                  <div *ngSwitchCase="-1">審核中</div>
-                  <div *ngSwitchCase="0">
+                  <div *ngSwitchCase="-1" class="alert alert-primary">審核中</div>
+                  <div *ngSwitchCase="1" class="alert alert-success">
                     <div>審核通過</div>
                     <div>
-                      <div>&nbsp;</div>
-                      <div>補課班別：02</div>
-                      <div>課程名稱：計量分析</div>
-                      <div>上課時間：2022-01-09 14:20:00</div>
-                      <div>上課教室：冠德講堂</div>
+                      <div>補課班次：{{section.nClassName}}</div>
+                      <div>課程名稱：{{section.nSubjectName}}</div>
+                      <div>上課時間：{{section.nSectionTime}}</div>
+                      <div>上課教室：{{section.nPlace}}</div>
                     </div>
                   </div>
-                  <div *ngSwitchCase="1">審核不通過</div>
+                  <div *ngSwitchCase="0" class="alert alert-danger">審核不通過<br />{{section.FailReason}}</div>
                 </container-element>
               </td>
-              <td><a class="btn btn-link">撤銷申請</a></td>
+              <td><a [class.disabled]="section.Cancel=='t' ? true: null" class="btn btn-outline-danger" (click)="revoke(section); $event.preventDefault();">{{section.Cancel=='t'?'已撤銷':'撤銷申請'}}</a></td>
           </tr>
-          <!--
-          <tr role="button" data-bs-toggle="modal" data-bs-target="#lessonsPage">
-              <td data-label="申請日期">2022/01/18</td>
-              <td data-label="課程名稱">服務與營運管理</td>
-              <td data-label="申請補課日期">2/2、3/30</td>
-              <td data-label="申請補課時間">星期六 09:00~12:40</td>
-              <td data-label="審核狀態">
-                  <span class="text-success">審核通過</span>
-                  <p class="mb-0">策略性績效管理-績效與文化<br>5/8、5/9 09:00~12:40</p>
-                  <strong>補課班別及課程、上課教室在這顯示</strong>
-              </td>
-          </tr>
-          -->
       </tbody>
   </table>
 </div>
@@ -91,98 +68,52 @@
           <div class="modal-body">
               <a class="btn btn-primary mb-3" data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
                   補課說明
-                </a>
-                <div class="collapse mb-3" id="collapseExample">
-                  <div class="card card-body">
-                      {{makeupMessage}}
-                  </div>
+              </a>
+              <div class="collapse mb-3" id="collapseExample">
+                <div class="card card-body">
+                    {{makeupMessage}}
                 </div>
-              <div class="list-group list-group-horizontal-md">
-                  <div class="list-group-item w-md-25">
-                      <div class="align-items-center row">
-                          <div class="col">
-                              <small class="mb-0 text-nowrap fw-semibold">姓名</small>
-                          </div>
-                          <div class="col">
-                              <small class="text-muted">{{myInfo?.Name}}</small>
-                          </div>
-                      </div>
-                  </div>
-                  <div class="list-group-item w-md-25">
-                      <div class="align-items-center row">
-                          <div class="col">
-                              <small class="mb-0 text-nowrap fw-semibold">班別</small>
-                          </div>
-                          <div class="col">
-                              <small class="text-muted">{{myInfo?.ClassName}}</small>
-                          </div>
-                      </div>
-                  </div>
-                  <div class="list-group-item w-md-25">
-                      <div class="align-items-center row">
-                          <div class="col">
-                              <small class="mb-0 text-nowrap fw-semibold">電子郵件</small>
-                          </div>
-                          <div class="col">
-                              <small class="text-muted">{{myInfo?.EmailList.email1}}</small>
-                          </div>
-                      </div>
-                  </div>
-                  <div class="list-group-item w-md-25">
-                      <div class="align-items-center row">
-                          <div class="col">
-                              <small class="mb-0 text-nowrap fw-semibold">電話</small>
-                          </div>
-                          <div class="col">
-                              <small class="text-muted">{{myInfo?.SMSPhone}}</small>
-                          </div>
-                      </div>
-                  </div>
               </div>
               <table class="table table-bordered rwd-table mt-3">
                   <thead class="table-light">
                       <tr>
                           <!--<th></th>-->
-                          <th>原班別</th>
+                          <th>開課班次</th>
                           <th>課程名稱</th>
-                          <th>申請補課時間</th>
+                          <th><span style="color: red;">*</span>申請補課時間</th>
                       </tr>
                   </thead>
                   <tbody>
                       <tr *ngFor="let course of myCourse?.Courses; index as i">
-                        <!--
-                          <td>
-                              <input type="checkbox" class="btn-check" name="options-outlined" id="{{'course-' + course.CourseID}}" autocomplete="off" (click)="courseChange($event, course);">
-                              <label class="btn btn-outline-danger text-nowrap" for="{{'course-' + course.CourseID}}">申請</label>
-                          </td>
-                          -->
-                          <td data-label="班次">{{course.ClassName}}</td>
+                          <td data-label="開課班次">{{course.ClassName}}</td>
                           <td data-label="課程名稱">{{course.SubjectName}}</td>
                           <td data-label="申請補課時間">
-                            <div *ngFor="let section of myCourse.CourseSections index as j">
+                            <div *ngFor="let section of myCourse.CourseSections index as j;">
                               <div *ngIf="course.CourseID==section.RefCourseID">
                                 <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" id="{{'sectionCheckbox-' + section.SectionID}}" value="{{section.SectionID}}" (click)="sectionChange($event, course, section)">
-                                    <label class="form-check-label" for="{{'sectionCheckbox-' + section.SectionID}}">{{section.StartTime}}</label>
+                                    <input [disabled]="section.Status || CompareNow(section.StartTime)" class="form-check-input" type="checkbox" id="{{'sectionCheckbox-' + section.SectionID}}" value="{{section.SectionID}}" (click)="sectionChange($event, course, section)" style="cursor: pointer;">
+                                    <label class="form-check-label" for="{{'sectionCheckbox-' + section.SectionID}}" style="cursor: pointer;">{{section.StartTime}}
+                                      <container-element [ngSwitch]="section.Status">
+                                        <span *ngSwitchCase="-1" style="color: #084298;">(審核中)</span>
+                                        <span *ngSwitchCase="'0'" style="color: #842029;">(審核不通過)</span>
+                                        <span *ngSwitchCase="1" style="color: #0f5132;">(審核通過)</span>
+                                        <span *ngSwitchCase="''">
+                                          <span *ngIf="CompareNow(section.StartTime) && !section.isMakeup">(已過期)</span>
+                                        </span>
+                                      </container-element>
+                                      <span *ngIf="section.isMakeup">{{"(已補課：" + section.MakeupDescription + ")"}}</span>
+                                    </label>
                                 </div>
                               </div>
                             </div>
-                              <div class="bg-light text-muted small p-2 mt-3">剩餘補課申請次數：2</div>
+                              <div class="bg-light text-muted small p-2 mt-3">剩餘補課申請次數：{{getMakeupCount(course)}}</div>
                           </td>
-                          <!--
-                          <td data-label="申請補課原因">
-                            <div>
-                              <div><a class="btn btn-link" style="padding: 5px; font-size: 14px;" (click)="copy($event, course);">複製</a><a class="btn btn-link" style="padding: 5px; font-size: 14px;" (click)="paste($event, course);">貼上</a></div>
-                              <textarea class="form-control" rows="2" id="{{'reason-' + course.CourseID}}"></textarea>
-                            </div>
-                          </td>
-                          -->
                       </tr>
                   </tbody>
               </table>
               <div class="card card-body">
                   <div class="mb-3">
-                      <label class="form-label fw-semibold">補課原因</label><!--<small class="ms-2 text-muted">2022/01/18</small>-->
+                      <label class="form-label fw-semibold"><span style="color: red;">*</span>補課原因</label><!--<small class="ms-2 text-muted">2022/01/18</small>-->
                       <textarea class="form-control" rows="3" #reason [(ngModel)]="currentReason"></textarea>
                   </div>
               </div>
@@ -190,115 +121,6 @@
           <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
               <button type="button" class="btn btn-primary" data-bs-dismiss="modal" (click)="sendMakeupRequest();">送出申請</button>
-          </div>
-      </div>
-  </div>
-</div>
-
-<div class="modal fade" id="lessonsPage" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-          <div class="modal-header">
-              <h5 class="modal-title" id="exampleModalLabel">補課申請狀態</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-              <div class="alert alert-primary" role="alert">
-                  <strong>審核中</strong>
-              </div>
-              <div class="alert alert-success" role="alert">
-                  <strong>審核通過</strong>
-                  <p class="mb-0">策略性績效管理-績效與文化<br>5/8、5/9 09:00~12:40</p>
-                  <strong>補課班別及課程、上課教室在這顯示</strong>
-              </div>
-              <div class="alert alert-danger" role="alert">
-                  <strong>審核不通過</strong>
-                  <p class="mb-0">補課人數已額滿，下回請早。</p>
-              </div>
-              <div class="list-group list-group-horizontal-md">
-                  <div class="list-group-item w-md-25">
-                      <div class="align-items-center row">
-                          <div class="col">
-                              <small class="mb-0 text-nowrap fw-semibold">姓名</small>
-                          </div>
-                          <div class="col">
-                              <small class="text-muted">陳宜君</small>
-                          </div>
-                      </div>
-                  </div>
-                  <div class="list-group-item w-md-25">
-                      <div class="align-items-center row">
-                          <div class="col">
-                              <small class="mb-0 text-nowrap fw-semibold">班別</small>
-                          </div>
-                          <div class="col">
-                              <small class="text-muted">P99744012</small>
-                          </div>
-                      </div>
-                  </div>
-                  <div class="list-group-item w-md-25">
-                      <div class="align-items-center row">
-                          <div class="col">
-                              <small class="mb-0 text-nowrap fw-semibold">性別</small>
-                          </div>
-                          <div class="col">
-                              <small class="text-muted">女</small>
-                          </div>
-                      </div>
-                  </div>
-                  <div class="list-group-item w-md-25">
-                      <div class="align-items-center row">
-                          <div class="col">
-                              <small class="mb-0 text-nowrap fw-semibold">電話</small>
-                          </div>
-                          <div class="col">
-                              <small class="text-muted">09xxxxxxxx</small>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-              <table class="table table-bordered rwd-table mt-3">
-                  <thead class="table-light">
-                      <tr>
-                          <th>課程名稱</th>
-                          <th>申請補課日期</th>
-                          <th>申請補課時間</th>
-                      </tr>
-                  </thead>
-                  <tbody>
-                      <tr>
-                          <td data-label="課程名稱">服務與營運管理</td>
-                          <td data-label="申請補課日期及時段">2/2、3/30</td>
-                          <td data-label="原上課時間">星期六 09:00~12:40</td>
-                      </tr>
-                  </tbody>
-              </table>
-              <div class="list-group">
-                  <div class="list-group-item">
-                      <div class="align-items-center row">
-                          <div class="col-3">
-                              <small class="mb-0 text-nowrap fw-semibold">申請日期</small>
-                          </div>
-                          <div class="col-9">
-                              <span class="text-muted">2022/01/18</span>
-                          </div>
-                      </div>
-                  </div>
-                  <div class="list-group-item">
-                      <div class="align-items-center row">
-                          <div class="col-3">
-                              <small class="mb-0 text-nowrap fw-semibold">補課原因</small>
-                          </div>
-                          <div class="col-9">
-                              <span class="text-muted">原因原因原因原因原因原因原因原因原因</span>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-          </div>
-          <div class="modal-footer">
-              <button type="button" class="btn btn-outline-danger">撤銷申請</button>
-              <button type="button" class="btn btn-primary" data-bs-dismiss="modal">關閉</button>
           </div>
       </div>
   </div>
