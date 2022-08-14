@@ -12,8 +12,6 @@ export class AppComponent implements OnInit {
   publicContract: any;
   studentContract: any;
 
-  configuration: any;
-  myInfo: any;
   myCourse: any = { Courses: [], CourseSections: []};
   systemMessage: string = '';
   makeupMessage: string = '';
@@ -43,7 +41,6 @@ export class AppComponent implements OnInit {
     await this.getSchoolYear();
     this.getSystemMessage();
     this.getMakeupMessage();
-    this.getMyInfo();
     this.getMyCourse();
     this.getMakeupRequest();
   }
@@ -60,9 +57,8 @@ export class AppComponent implements OnInit {
   //  系統說明文字
   async getSystemMessage() {
     try {
-      this.configuration = await this.publicContract.send('GetConfiguration', {name: '台大EMBA補課申請系統說明文字'});
-      this.systemMessage = this.configuration.Configurations.Configuration['@text'];
-      // console.log(this.configuration.Configurations.Configuration['@text']);
+      const rsp = await this.studentContract.send('makeup_request.GetConfiguration', {ConfName: 'MakeupSystemExplain'});
+      this.systemMessage = rsp.Response;
     } catch (ex) {
       console.log("取得「台大EMBA補課申請系統說明文字」發生錯誤! \n" + (ex));
     }
@@ -71,22 +67,10 @@ export class AppComponent implements OnInit {
   //  補課說明文字
   async getMakeupMessage() {
     try {
-      this.configuration = await this.publicContract.send('GetConfiguration', {name: '台大EMBA補課說明文字'});
-      this.makeupMessage = this.configuration.Configurations.Configuration['@text'];
-      // console.log(this.configuration.Configurations.Configuration['@text']);
+      const rsp = await this.studentContract.send('makeup_request.GetConfiguration', {ConfName: 'MakeupRequestExplain'});
+      this.makeupMessage = rsp.Response;
     } catch (ex) {
       console.log("取得「台大EMBA補課說明文字」發生錯誤! \n" + (ex));
-    }
-  }
-
-  //  學生資訊
-  async getMyInfo() {
-    try {
-      const rsp = await this.studentContract.send('default.GetMyInfo');
-      this.myInfo = rsp.Result;
-      // console.log(this.myInfo);
-    } catch (ex) {
-      console.log("取得「學生資訊」發生錯誤! \n" + (ex));
     }
   }
 

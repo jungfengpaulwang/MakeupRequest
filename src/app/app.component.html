@@ -4,9 +4,7 @@
           <h1>補課申請</h1>
       </ol>
   </nav>
-  <div class="alert alert-info" role="alert">
-      {{systemMessage}}
-  </div>
+  <div class="alert alert-info" role="alert" [innerHTML]="systemMessage"></div>
   <div class="d-flex align-items-center">
       <h5 class="mb-0">{{currentSemester?.SchoolYear}} 學年度
         <container-element [ngSwitch]="currentSemester?.Semester">
@@ -70,9 +68,7 @@
                   補課說明
               </a>
               <div class="collapse mb-3" id="collapseExample">
-                <div class="card card-body">
-                    {{makeupMessage}}
-                </div>
+                <div class="card card-body" [innerHTML]="makeupMessage"></div>
               </div>
               <table class="table table-bordered rwd-table mt-3">
                   <thead class="table-light">
