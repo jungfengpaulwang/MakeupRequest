@@ -183,24 +183,15 @@ export class AppComponent implements OnInit {
   //   (element as HTMLTextAreaElement).value = this.currentReason;
   // }
   async revoke(section: any) {
-        // let request = { Request: {}};
-    // request.Request = {
-    //   SchoolYear: this.currentSemester.SchoolYear,
-    //   Semester: this.currentSemester.Semester,
-    //   RefCourseID: section.RefCourseID,
-    //   RefSectionID: section.RefSectionID,
-    // };
-    // let rsp = await this.studentContract.send('makeup_request.RevokeMakeup', request);
-    // this.getMakeupRequest();
-    const mailchimp = require('@mailchimp/mailchimp_transactional')('edCgVEprRDiIeDfxOliOXQ');
-
-    async function callPing() {
-      const response = await mailchimp.users.ping();
-      console.log(response);
-    }
-
-    callPing();
+    let request = { Request: {
+      SchoolYear: this.currentSemester.SchoolYear,
+      Semester: this.currentSemester.Semester,
+      RefCourseID: section.RefCourseID,
+      RefSectionID: section.RefSectionID,}};
+    let rsp = await this.studentContract.send('RevokeMakeup', request);
+    this.getMakeupRequest();
   }
+
   //  送出申請
   async sendMakeupRequest() {
     if (this.currentReason.trim() == '') {
@@ -222,6 +213,8 @@ export class AppComponent implements OnInit {
               Reason: this.currentReason,
               RefCourseID: section.RefCourseID,
               RefSectionID: section.SectionID,
+              StartTime: section.StartTime,
+              EndTime: section.EndTime,
             }
           });
         }
@@ -232,6 +225,75 @@ export class AppComponent implements OnInit {
       return;
     }
     let rsp = await this.studentContract.send('SetRequest', request);
+    this.sendMail(request.Request.Sections);
     this.getMakeupRequest();
+  }
+
+  //  寄信
+  async sendMail(sections: any) {
+    try{
+      /*
+        [[學年度]]
+        [[學期]]
+        [[學生姓名]]
+        [[申請時間]]
+        [[申請補課原因]]
+        [[申請補課課程名稱]]
+        [[申請補課時段]]
+      */
+      let studentName = '';
+      let rsp = await this.studentContract.send('GetMyInfo');
+      if (rsp && rsp.Result) studentName = rsp.Result.Name;
+
+      rsp = await this.studentContract.send('GetConfiguration', {ConfName: 'MakeupRequestEmailTemplate_subject'});
+      let subject = rsp.Response;
+      rsp = await this.studentContract.send('GetConfiguration', {ConfName: 'MakeupRequestEmailTemplate'});
+      let content = rsp.Response;
+
+      rsp = await this.studentContract.send('GetMandrillApiKey');
+      let mailchimpApiKey: string = '';
+      if (rsp) mailchimpApiKey = rsp.Response;
+
+      const mailchimpClient = require('@mailchimp/mailchimp_transactional')(mailchimpApiKey);
+      async function callPing() {
+        const response = await mailchimpClient.users.ping();
+        return response;
+      }
+      const pong = await callPing();
+      if (pong != 'PONG!') return;
+
+      const sendmail = async (subject: string, content: string) => {
+        const response = await mailchimpClient.messages.send({ message: {
+          html: content,
+          text: content,
+          subject: subject,
+          from_email: 'paul.wang@ischool.com.tw',
+          from_name: studentName,
+          to: [{
+            email: 'paul.wang@ischool.com.tw',
+            // name: '汪嶸峰',
+            type: 'to',
+          }],
+          important: true,
+
+        } });
+        console.log(response);
+      };
+      sections.forEach((section: any)=>{
+        const makeupTime = section.Section.StartTime.substr(0, 16) + "~" + section.Section.EndTime.substr(11, 5);
+        const courseName = this.courseModal[section.Section.RefCourseID].Course.SubjectName + ' ' + this.courseModal[section.Section.RefCourseID].Course.ClassName;
+        subject = subject.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', this.currentSemester.Semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', section.Section.RequestDateTime).replaceAll('[[申請補課原因]]', section.Section.Reason).replaceAll('[[申請補課課程名稱]]', courseName).replaceAll('[[申請補課時段]]', makeupTime);
+        content = content.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', this.currentSemester.Semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', section.Section.RequestDateTime).replaceAll('[[申請補課原因]]', section.Section.Reason).replaceAll('[[申請補課課程名稱]]', courseName).replaceAll('[[申請補課時段]]', makeupTime);
+        sendmail(subject, content);
+
+      // let
+
+      // let content =
+      });
+
+
+    } catch (ex) {
+      console.log("寄信失敗! \n" + (ex));
+    }
   }
 }
