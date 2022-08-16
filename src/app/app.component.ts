@@ -183,15 +183,23 @@ export class AppComponent implements OnInit {
   //   (element as HTMLTextAreaElement).value = this.currentReason;
   // }
   async revoke(section: any) {
-    let request = { Request: {}};
-    request.Request = {
-      SchoolYear: this.currentSemester.SchoolYear,
-      Semester: this.currentSemester.Semester,
-      RefCourseID: section.RefCourseID,
-      RefSectionID: section.RefSectionID,
-    };
-    let rsp = await this.studentContract.send('RevokeMakeup', request);
-    this.getMakeupRequest();
+        // let request = { Request: {}};
+    // request.Request = {
+    //   SchoolYear: this.currentSemester.SchoolYear,
+    //   Semester: this.currentSemester.Semester,
+    //   RefCourseID: section.RefCourseID,
+    //   RefSectionID: section.RefSectionID,
+    // };
+    // let rsp = await this.studentContract.send('makeup_request.RevokeMakeup', request);
+    // this.getMakeupRequest();
+    const mailchimp = require('@mailchimp/mailchimp_transactional')('edCgVEprRDiIeDfxOliOXQ');
+
+    async function callPing() {
+      const response = await mailchimp.users.ping();
+      console.log(response);
+    }
+
+    callPing();
   }
   //  送出申請
   async sendMakeupRequest() {
