@@ -9,7 +9,6 @@ import { GadgetService } from "./gadget.service";
 })
 export class AppComponent implements OnInit {
   currentSemester: any;
-  publicContract: any;
   studentContract: any;
 
   myCourse: any = { Courses: [], CourseSections: []};
@@ -28,12 +27,7 @@ export class AppComponent implements OnInit {
 
   async ngOnInit() {
     try {
-      this.publicContract = await this.gadgetService.getContract('emba.public');
-    } catch (ex) {
-      console.log("取得「emba.public」Contract 發生錯誤! \n" + JSON.stringify(ex));
-    }
-    try {
-      this.studentContract = await this.gadgetService.getContract('emba.student');
+      this.studentContract = await this.gadgetService.getContract('emba.student.makeup_request');
     } catch (ex) {
       console.log("取得「emba.student」Contract 發生錯誤! \n" + JSON.stringify(ex));
     }
@@ -48,7 +42,7 @@ export class AppComponent implements OnInit {
   //  當前學年度學期
   async getSchoolYear() {
     try {
-      this.currentSemester = await this.publicContract.send('GetCurrentSemester');
+      this.currentSemester = await this.studentContract.send('GetCurrentSemester');
     } catch (ex) {
       console.log("取得「目前學年度學期」發生錯誤! \n" + (ex));
     }
@@ -57,7 +51,7 @@ export class AppComponent implements OnInit {
   //  系統說明文字
   async getSystemMessage() {
     try {
-      const rsp = await this.studentContract.send('makeup_request.GetConfiguration', {ConfName: 'MakeupSystemExplain'});
+      const rsp = await this.studentContract.send('GetConfiguration', {ConfName: 'MakeupSystemExplain'});
       this.systemMessage = rsp.Response;
     } catch (ex) {
       console.log("取得「台大EMBA補課申請系統說明文字」發生錯誤! \n" + (ex));
@@ -67,7 +61,7 @@ export class AppComponent implements OnInit {
   //  補課說明文字
   async getMakeupMessage() {
     try {
-      const rsp = await this.studentContract.send('makeup_request.GetConfiguration', {ConfName: 'MakeupRequestExplain'});
+      const rsp = await this.studentContract.send('GetConfiguration', {ConfName: 'MakeupRequestExplain'});
       this.makeupMessage = rsp.Response;
     } catch (ex) {
       console.log("取得「台大EMBA補課說明文字」發生錯誤! \n" + (ex));
@@ -80,14 +74,14 @@ export class AppComponent implements OnInit {
     try {
       let request = { Request: {}};
       request.Request = {SchoolYear: this.currentSemester.SchoolYear, Semester: this.currentSemester.Semester};
-      let rsp = await this.studentContract.send('makeup_request.GetCurrentCourse', request);
+      let rsp = await this.studentContract.send('GetCurrentCourse', request);
       this.myCourse.Courses = [].concat(rsp.Result.Course);
       this.myCourse.Courses.forEach((course: any) => {
         this.courseModal[course.CourseID] = {};
         this.courseModal[course.CourseID].Selected = false;
         this.courseModal[course.CourseID].Course = course;
       });
-      rsp = await this.studentContract.send('makeup_request.GetCourseSection', request);
+      rsp = await this.studentContract.send('GetCourseSection', request);
       this.myCourse.CourseSections = [].concat(rsp.Response);
       this.myCourse.CourseSections.forEach((section: any) => {
         if (this.courseModal[section.RefCourseID] !== undefined) {
@@ -112,7 +106,7 @@ export class AppComponent implements OnInit {
   this.makeupRequestList = [];
   let request = { Request: {}};
   request.Request = {SchoolYear: this.currentSemester.SchoolYear, Semester: this.currentSemester.Semester};
-  let rsp = await this.studentContract.send('makeup_request.GetRequest', request);
+  let rsp = await this.studentContract.send('GetRequest', request);
   if (rsp && rsp.Response) {
     ([].concat(rsp.Response)).forEach((r: any)=>{
       this.makeupRequestList.push({
@@ -196,7 +190,7 @@ export class AppComponent implements OnInit {
       RefCourseID: section.RefCourseID,
       RefSectionID: section.RefSectionID,
     };
-    let rsp = await this.studentContract.send('makeup_request.RevokeMakeup', request);
+    let rsp = await this.studentContract.send('RevokeMakeup', request);
     this.getMakeupRequest();
   }
   //  送出申請
@@ -229,7 +223,7 @@ export class AppComponent implements OnInit {
       alert('請勾選申請補課時間');
       return;
     }
-    let rsp = await this.studentContract.send('makeup_request.SetRequest', request);
+    let rsp = await this.studentContract.send('SetRequest', request);
     this.getMakeupRequest();
   }
 }
