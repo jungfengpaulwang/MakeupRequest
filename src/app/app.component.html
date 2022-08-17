@@ -13,7 +13,7 @@
           <span *ngSwitchCase="2">第2學期</span>
        </container-element>
       </h5>
-      <button type="button" class="btn btn-primary my-3 ms-auto" data-bs-toggle="modal" data-bs-target="#lessonsForm"><i class="fas fa-plus text-white"></i> 填寫補課申請表</button>
+      <button type="button" class="btn btn-primary my-3 ms-auto" (click)="openModal(lessonsForm)"><i class="fas fa-plus text-white"></i> 填寫補課申請表</button>
   </div>
 
   <table class="table table-bordered rwd-table mt-3">
@@ -56,70 +56,90 @@
   </table>
 </div>
 <!-- Modal -->
-<div class="modal fade" id="lessonsForm" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-          <div class="modal-header">
-              <h5 class="modal-title" id="exampleModalLabel">填寫補課申請表</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-              <a class="btn btn-primary mb-3" data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
-                  補課說明
-              </a>
-              <div class="collapse mb-3" id="collapseExample">
-                <div class="card card-body" [innerHTML]="makeupMessage"></div>
-              </div>
-              <table class="table table-bordered rwd-table mt-3">
-                  <thead class="table-light">
-                      <tr>
-                          <!--<th></th>-->
-                          <th>開課班次</th>
-                          <th>課程名稱</th>
-                          <th><span style="color: red;">*</span>申請補課時間</th>
-                      </tr>
-                  </thead>
-                  <tbody>
-                      <tr *ngFor="let course of myCourse?.Courses; index as i">
-                          <td data-label="開課班次">{{course.ClassName}}</td>
-                          <td data-label="課程名稱">{{course.SubjectName}}</td>
-                          <td data-label="申請補課時間">
-                            <div *ngFor="let section of myCourse.CourseSections index as j;">
-                              <div *ngIf="course.CourseID==section.RefCourseID">
-                                <div class="form-check form-check-inline">
-                                    <input [disabled]="section.Status || CompareNow(section.StartTime)" class="form-check-input" type="checkbox" id="{{'sectionCheckbox-' + section.SectionID}}" value="{{section.SectionID}}" (click)="sectionChange($event, course, section)" style="cursor: pointer;">
-                                    <label class="form-check-label" for="{{'sectionCheckbox-' + section.SectionID}}" style="cursor: pointer;">{{section.StartTime}}
-                                      <container-element [ngSwitch]="section.Status">
-                                        <span *ngSwitchCase="-1" style="color: #084298;">(審核中)</span>
-                                        <span *ngSwitchCase="'0'" style="color: #842029;">(審核不通過)</span>
-                                        <span *ngSwitchCase="1" style="color: #0f5132;">(審核通過)</span>
-                                        <span *ngSwitchCase="''">
-                                          <span *ngIf="CompareNow(section.StartTime) && !section.isMakeup">(已過期)</span>
-                                        </span>
-                                      </container-element>
-                                      <span *ngIf="section.isMakeup">{{"(已補課：" + section.MakeupDescription + ")"}}</span>
-                                    </label>
-                                </div>
+<ng-template #lessonsForm class="modal-dialog modal-lg" let-modal tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">填寫補課申請表</h5>
+            <button type="button" class="btn-close" aria-label="Close" (click)="closeModal();"></button>
+        </div>
+        <div class="modal-body">
+            <a class="btn btn-primary mb-3" data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+                補課說明
+            </a>
+            <div class="collapse mb-3" id="collapseExample">
+              <div class="card card-body" [innerHTML]="makeupMessage"></div>
+            </div>
+            <table class="table table-bordered rwd-table mt-3">
+                <thead class="table-light">
+                    <tr>
+                        <!--<th></th>-->
+                        <th>開課班次</th>
+                        <th>課程名稱</th>
+                        <th><span style="color: red;">*</span>申請補課時間</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let course of myCourse?.Courses; index as i">
+                        <td data-label="開課班次">{{course.ClassName}}</td>
+                        <td data-label="課程名稱">{{course.SubjectName}}</td>
+                        <td data-label="申請補課時間">
+                          <div *ngFor="let section of myCourse.CourseSections index as j;">
+                            <div *ngIf="course.CourseID==section.RefCourseID">
+                              <div class="form-check form-check-inline">
+                                  <input [disabled]="section.Status || CompareNow(section.StartTime)" class="form-check-input" type="checkbox" id="{{'sectionCheckbox-' + section.SectionID}}" value="{{section.SectionID}}" (click)="sectionChange($event, course, section)" style="cursor: pointer;">
+                                  <label class="form-check-label" for="{{'sectionCheckbox-' + section.SectionID}}" style="cursor: pointer;">{{section.StartTime}}
+                                    <container-element [ngSwitch]="section.Status">
+                                      <span *ngSwitchCase="-1" style="color: #084298;">(審核中)</span>
+                                      <span *ngSwitchCase="'0'" style="color: #842029;">(審核不通過)</span>
+                                      <span *ngSwitchCase="1" style="color: #0f5132;">(審核通過)</span>
+                                      <span *ngSwitchCase="''">
+                                        <span *ngIf="CompareNow(section.StartTime) && !section.isMakeup">(已過期)</span>
+                                      </span>
+                                    </container-element>
+                                    <span *ngIf="section.isMakeup">{{"(已補課：" + section.MakeupDescription + ")"}}</span>
+                                  </label>
                               </div>
                             </div>
-                              <div class="bg-light text-muted small p-2 mt-3">剩餘補課申請次數：{{getMakeupCount(course)}}</div>
-                          </td>
-                      </tr>
-                  </tbody>
-              </table>
-              <div class="card card-body">
-                  <div class="mb-3">
-                      <label class="form-label fw-semibold"><span style="color: red;">*</span>補課原因</label><!--<small class="ms-2 text-muted">2022/01/18</small>-->
-                      <textarea class="form-control" rows="3" #reason [(ngModel)]="currentReason"></textarea>
-                  </div>
-              </div>
-          </div>
-          <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-              <button type="button" class="btn btn-primary" data-bs-dismiss="modal" (click)="sendMakeupRequest();">送出申請</button>
-          </div>
-      </div>
+                          </div>
+                            <div class="bg-light text-muted small p-2 mt-3">剩餘補課申請次數：{{getMakeupCount(course)}}</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="card card-body">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold"><span style="color: red;">*</span>補課原因</label><!--<small class="ms-2 text-muted">2022/01/18</small>-->
+                    <textarea class="form-control" rows="3" #reason [(ngModel)]="currentReason"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeModal();">取消</button>
+            <button type="button" class="btn btn-primary" (click)="sendMakeupRequest();">送出申請</button>
+        </div>
+    </div>
+</ng-template>
+
+<!--送出補課申請時，因資料不足而發出的警告-->
+<ng-template #alertModal let-modal>
+  <div class="modal-footer" style="display: block;">
+    <div style="color: red; font-weight: bold; text-align: center; white-space: break-spaces;">{{alertModalMessage}}</div>
+    <button type="button" class="btn btn-link" (click)="modal.close()" style="float: right;">關閉</button>
   </div>
-</div>
+</ng-template>
+
+<!--點選「撤銷申請」時，發出警告-->
+<ng-template #revokeModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-title" style="color: red;">撤銷申請警告</h4>
+  </div>
+  <div class="modal-body">
+    <p style="font-size: large;"><strong>您確定要撤銷補課申請？</strong></p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel')">取消</button>
+    <button type="button" class="btn btn-danger" (click)="modal.close('ok')">確定</button>
+  </div>
+</ng-template>
 
 <router-outlet></router-outlet>

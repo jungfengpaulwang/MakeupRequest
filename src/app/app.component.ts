@@ -1,13 +1,18 @@
-import { Component, OnInit, ChangeDetectorRef, Input, Output, EventEmitter, HostListener, Renderer2 } from '@angular/core';
-import { count } from 'rxjs';
+import { Component, OnInit, ChangeDetectorRef, Input, Output, EventEmitter, HostListener, Renderer2, ViewChild } from '@angular/core';
+import { NgbModalConfig, NgbActiveModal, NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { GadgetService } from "./gadget.service";
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css',]
+  styleUrls: ['./app.component.css',],
+  providers: [NgbModalConfig, NgbModal, NgbActiveModal],
 })
 export class AppComponent implements OnInit {
+  modalRef: NgbModalRef | undefined;
+  @ViewChild('alertModal') alertModal: NgbModalRef | undefined;
+  @ViewChild('revokeModal') revokeModal: NgbModalRef | undefined;
+  
   currentSemester: any;
   studentContract: any;
 
@@ -17,12 +22,37 @@ export class AppComponent implements OnInit {
   courseModal: any = {};
   makeupRequestList: Array<any> = [];
   currentReason: string = '';
+  alertModalMessage: string = '';
   now: Date = new Date();
 
-  constructor(private gadgetService: GadgetService, private renderer: Renderer2,) {
+  constructor(private gadgetService: GadgetService, private modalService: NgbModal, private config: NgbModalConfig, ) {
+    // config.backdrop = 'static';
+    // config.keyboard = false;
+    // config.size = 'lg';
+
     setInterval(() => {
       this.now = new Date();
     }, 1);
+  }
+
+  openModal(content: any) {
+    Object.keys(this.courseModal).forEach((CourseID: string) => {
+      Object.keys(this.courseModal[CourseID]).forEach((SectionID: string) => {
+        if (this.courseModal[CourseID][SectionID].Selected) {
+          this.courseModal[CourseID][SectionID].Selected = false;
+        }
+      });
+    });
+    this.currentReason = '';
+    this.modalRef = this.modalService.open(content, {
+      backdrop: 'static',
+      keyboard: false,
+      size: 'lg',
+    });
+  }
+
+  closeModal() {
+    this.modalRef?.close();
   }
 
   async ngOnInit() {
@@ -152,52 +182,28 @@ export class AppComponent implements OnInit {
     }
   }
 
-  // //  course click
-  // courseChange(event: any, course:any) {
-  //   let element = document.querySelector('label[for="course-'+ course.CourseID + '"]');
-  //   if (!element) return;
-
-  //   if (event.target.checked) {
-  //     this.renderer.setStyle(element, "color", "#fff");
-  //     this.renderer.setStyle(element, "background-color", "#dc3545");
-  //     this.courseModal[course.CourseID].Selected = true;
-  //     // this.renderer.setStyle(element, "border-color", "#fff");
-  //   } else {
-  //     this.renderer.setStyle(element, "color", "#dc3545");
-  //     this.renderer.setStyle(element, "background-color", "#fff");
-  //     this.courseModal[course.CourseID].Selected = false;
-  //     // this.renderer.setStyle(element, "border-color", "#dc3545");
-  //   }
-  //   console.log(this.courseModal);
-  // }
-
-  // //  copy click
-  // copy(event: any, course:any) {
-  //   let element = document.querySelector('textarea[id="reason-'+ course.CourseID + '"]');
-  //   this.currentReason = (element as HTMLTextAreaElement).value;
-  // }
-
-  // //  paste click
-  // paste(event: any, course:any) {
-  //   let element = document.querySelector('textarea[id="reason-'+ course.CourseID + '"]');
-  //   (element as HTMLTextAreaElement).value = this.currentReason;
-  // }
   async revoke(section: any) {
-    let request = { Request: {
-      SchoolYear: this.currentSemester.SchoolYear,
-      Semester: this.currentSemester.Semester,
-      RefCourseID: section.RefCourseID,
-      RefSectionID: section.RefSectionID,}};
-    let rsp = await this.studentContract.send('RevokeMakeup', request);
-    this.getMakeupRequest();
+    let closeResult = '';
+    this.modalService.open(this.revokeModal, {
+      backdrop: 'static',
+      keyboard: false,
+      size: 'sm',
+      centered: true
+    }).result.then(async (result) => {
+      let request = { Request: {
+        SchoolYear: this.currentSemester.SchoolYear,
+        Semester: this.currentSemester.Semester,
+        RefCourseID: section.RefCourseID,
+        RefSectionID: section.RefSectionID,}};
+      let rsp = await this.studentContract.send('RevokeMakeup', request);
+      this.getMakeupRequest();
+    }, (reason) => {
+      ;
+    });;
   }
 
   //  送出申請
   async sendMakeupRequest() {
-    if (this.currentReason.trim() == '') {
-      alert('請填寫補課原因');
-      return;
-    }
     let m = new Date();
     let dateString = m.getFullYear() +"/"+ (m.getMonth()+1) +"/"+ m.getDate() + " " + m.getHours() + ":" + m.getMinutes() + ":" + m.getSeconds();
     let request: any = { Request: {Sections: []}};
@@ -220,27 +226,37 @@ export class AppComponent implements OnInit {
         }
       });
     });
+    let alertMessages = [];
+    if (this.currentReason.trim() == '') {
+      alertMessages.push('請填寫補課原因');
+    }
     if (request.Request.Sections.length == 0) {
-      alert('請勾選申請補課時間');
+      alertMessages.push('請勾選申請補課時間');
+    }
+    if (alertMessages.length > 0) {
+      this.alertModalMessage = alertMessages.join('\n');
+      this.modalService.open(this.alertModal, {
+        backdrop: true,
+        keyboard: true,
+        size: 'sm',
+        centered: true
+      });
       return;
     }
     let rsp = await this.studentContract.send('SetRequest', request);
     this.sendMail(request.Request.Sections);
     this.getMakeupRequest();
+    this.getMyCourse();
+    this.modalRef?.close();
   }
 
   //  寄信
   async sendMail(sections: any) {
     try{
-      /*
-        [[學年度]]
-        [[學期]]
-        [[學生姓名]]
-        [[申請時間]]
-        [[申請補課原因]]
-        [[申請補課課程名稱]]
-        [[申請補課時段]]
-      */
+      let semester = '';
+      if (this.currentSemester.Semester == 0) semester = '夏季學期';
+      if (this.currentSemester.Semester == 1) semester = '第1學期';
+      if (this.currentSemester.Semester == 2) semester = '第2學期';
       let studentName = '';
       let rsp = await this.studentContract.send('GetMyInfo');
       if (rsp && rsp.Result) studentName = rsp.Result.Name;
@@ -250,10 +266,22 @@ export class AppComponent implements OnInit {
       rsp = await this.studentContract.send('GetConfiguration', {ConfName: 'MakeupRequestEmailTemplate'});
       let content = rsp.Response;
 
+      rsp = await this.studentContract.send('GetMakeupCarer');console.log(rsp);
+      let receivers: { email: string; type: string; }[] = [];
+      ([].concat(rsp.Response)).forEach((mail: string)=>{console.log(mail);
+        receivers.push({
+          email: mail,
+          type: 'to',
+        });
+      });
+
       rsp = await this.studentContract.send('GetMandrillApiKey');
       let mailchimpApiKey: string = '';
-      if (rsp) mailchimpApiKey = rsp.Response;
-
+      let sender: string = '';
+      if (rsp) {
+        mailchimpApiKey = rsp.Response.apikey;
+        sender = rsp.Response.account;
+      }
       const mailchimpClient = require('@mailchimp/mailchimp_transactional')(mailchimpApiKey);
       async function callPing() {
         const response = await mailchimpClient.users.ping();
@@ -262,18 +290,14 @@ export class AppComponent implements OnInit {
       const pong = await callPing();
       if (pong != 'PONG!') return;
 
-      const sendmail = async (subject: string, content: string) => {
+      const sendmail = async (subject: string, content: string, receivers: Array<any>) => {
         const response = await mailchimpClient.messages.send({ message: {
           html: content,
           text: content,
           subject: subject,
-          from_email: 'paul.wang@ischool.com.tw',
-          from_name: studentName,
-          to: [{
-            email: 'paul.wang@ischool.com.tw',
-            // name: '汪嶸峰',
-            type: 'to',
-          }],
+          from_email: sender,
+          from_name: '',
+          to: receivers,
           important: true,
 
         } });
@@ -282,13 +306,10 @@ export class AppComponent implements OnInit {
       sections.forEach((section: any)=>{
         const makeupTime = section.Section.StartTime.substr(0, 16) + "~" + section.Section.EndTime.substr(11, 5);
         const courseName = this.courseModal[section.Section.RefCourseID].Course.SubjectName + ' ' + this.courseModal[section.Section.RefCourseID].Course.ClassName;
-        subject = subject.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', this.currentSemester.Semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', section.Section.RequestDateTime).replaceAll('[[申請補課原因]]', section.Section.Reason).replaceAll('[[申請補課課程名稱]]', courseName).replaceAll('[[申請補課時段]]', makeupTime);
-        content = content.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', this.currentSemester.Semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', section.Section.RequestDateTime).replaceAll('[[申請補課原因]]', section.Section.Reason).replaceAll('[[申請補課課程名稱]]', courseName).replaceAll('[[申請補課時段]]', makeupTime);
-        sendmail(subject, content);
+        subject = subject.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', section.Section.RequestDateTime).replaceAll('[[申請補課原因]]', section.Section.Reason).replaceAll('[[申請補課課程名稱]]', courseName).replaceAll('[[申請補課時段]]', makeupTime);
+        content = content.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', section.Section.RequestDateTime).replaceAll('[[申請補課原因]]', section.Section.Reason).replaceAll('[[申請補課課程名稱]]', courseName).replaceAll('[[申請補課時段]]', makeupTime);
+        sendmail(subject, content, receivers);
 
-      // let
-
-      // let content =
       });
 
 
