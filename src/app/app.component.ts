@@ -197,6 +197,7 @@ export class AppComponent implements OnInit {
         RefSectionID: section.RefSectionID,}};
       let rsp = await this.studentContract.send('RevokeMakeup', request);
       this.getMakeupRequest();
+      this.getMyCourse();
     }, (reason) => {
       ;
     });;
@@ -257,24 +258,45 @@ export class AppComponent implements OnInit {
       if (this.currentSemester.Semester == 0) semester = '夏季學期';
       if (this.currentSemester.Semester == 1) semester = '第1學期';
       if (this.currentSemester.Semester == 2) semester = '第2學期';
+
+      //  學生姓名
       let studentName = '';
       let rsp = await this.studentContract.send('GetMyInfo');
       if (rsp && rsp.Result) studentName = rsp.Result.Name;
 
-      rsp = await this.studentContract.send('GetConfiguration', {ConfName: 'MakeupRequestEmailTemplate_subject'});
-      let subject = rsp.Response;
-      rsp = await this.studentContract.send('GetConfiguration', {ConfName: 'MakeupRequestEmailTemplate'});
-      let content = rsp.Response;
+      //  補課申請行政人員通知信樣版
+      rsp = await this.studentContract.send('GetConfiguration', {ConfName: 'MakeupRequestManagerEmailTemplate_subject'});
+      let subject_manager = rsp.Response;
+      rsp = await this.studentContract.send('GetConfiguration', {ConfName: 'MakeupRequestManagerEmailTemplate'});
+      let content_manager = rsp.Response;
 
-      rsp = await this.studentContract.send('GetMakeupCarer');console.log(rsp);
-      let receivers: { email: string; type: string; }[] = [];
-      ([].concat(rsp.Response)).forEach((mail: string)=>{console.log(mail);
-        receivers.push({
+      //  補課申請學生通知信樣版
+      rsp = await this.studentContract.send('GetConfiguration', {ConfName: 'MakeupRequestStudentEmailTemplate_subject'});
+      let subject_student = rsp.Response;
+      rsp = await this.studentContract.send('GetConfiguration', {ConfName: 'MakeupRequestStudentEmailTemplate'});
+      let content_student = rsp.Response;
+
+      //  行政人員電子郵件
+      rsp = await this.studentContract.send('GetMakeupCarer');
+      let receivers_manager: { email: string; type: string; }[] = [];
+      ([].concat(rsp.Response)).forEach((mail: string)=>{
+        receivers_manager.push({
           email: mail,
           type: 'to',
         });
       });
 
+      //  學生電子郵件
+      rsp = await this.studentContract.send('GetMakeupCarer');
+      let receivers_student: { email: string; type: string; }[] = [];
+      ([].concat(rsp.Response)).forEach((mail: string)=>{
+        receivers_student.push({
+          email: mail,
+          type: 'to',
+        });
+      });
+
+      //  Mailchimp ApiKey
       rsp = await this.studentContract.send('GetMandrillApiKey');
       let mailchimpApiKey: string = '';
       let sender: string = '';
@@ -282,6 +304,7 @@ export class AppComponent implements OnInit {
         mailchimpApiKey = rsp.Response.apikey;
         sender = rsp.Response.account;
       }
+      //  連接 Mailchimp
       const mailchimpClient = require('@mailchimp/mailchimp_transactional')(mailchimpApiKey);
       async function callPing() {
         const response = await mailchimpClient.users.ping();
@@ -290,6 +313,7 @@ export class AppComponent implements OnInit {
       const pong = await callPing();
       if (pong != 'PONG!') return;
 
+      //  Mailchimp 寄信函式
       const sendmail = async (subject: string, content: string, receivers: Array<any>) => {
         const response = await mailchimpClient.messages.send({ message: {
           html: content,
@@ -301,17 +325,50 @@ export class AppComponent implements OnInit {
           important: true,
 
         } });
+        //  Mailchimp 寄信結果
         console.log(response);
       };
-      sections.forEach((section: any)=>{
-        const makeupTime = section.Section.StartTime.substr(0, 16) + "~" + section.Section.EndTime.substr(11, 5);
-        const courseName = this.courseModal[section.Section.RefCourseID].Course.SubjectName + ' ' + this.courseModal[section.Section.RefCourseID].Course.ClassName;
-        subject = subject.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', section.Section.RequestDateTime).replaceAll('[[申請補課原因]]', section.Section.Reason).replaceAll('[[申請補課課程名稱]]', courseName).replaceAll('[[申請補課時段]]', makeupTime);
-        content = content.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', section.Section.RequestDateTime).replaceAll('[[申請補課原因]]', section.Section.Reason).replaceAll('[[申請補課課程名稱]]', courseName).replaceAll('[[申請補課時段]]', makeupTime);
-        sendmail(subject, content, receivers);
 
+      //  串接申請補課資訊，包含課程名稱與上課時段
+      let courseInfo: string = '<table style="border-color: black; border-style: solid; border-width: 0;"><tr style="background-color: #dee2e6;"><td>開課班次</td><td>課程名稱</td><td>申請補課時間</td></tr>';
+      let index = 0;
+      let reason = '';
+      let requestDateTime = '';
+      sections.forEach((section: any)=>{
+        reason = section.Section.Reason;
+        requestDateTime = section.Section.RequestDateTime;
+        const className = this.courseModal[section.Section.RefCourseID].Course.ClassName;
+        const subjectName = this.courseModal[section.Section.RefCourseID].Course.SubjectName;
+        const makeupTime = section.Section.StartTime.substr(0, 16) + "~" + section.Section.EndTime.substr(11, 5);
+
+        if (index % 2 == 0) {
+          courseInfo += `<tr><td>${className}</td><td>${subjectName}</td><td>${makeupTime}</td></tr>`;
+        } else {
+          courseInfo += `<tr style="background-color: #dee2e6;"><td>${className}</td><td>${subjectName}</td><td>${makeupTime}</td></tr>`;
+        }
+
+        index += 1;
       });
 
+      //  先寄補課申請行政人員通知信      
+      subject_manager = subject_manager.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
+      content_manager = content_manager.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
+      sendmail(subject_manager, content_manager, receivers_manager);
+
+      /*
+      rsp = await this.studentContract.send('SendMail', {
+        Request: {
+          Receiver: receivers_manager,
+          Subject: subject_manager,
+          HtmlContent: content_manager,
+        }
+      });
+      */
+
+      //  再寄補課申請學生通知信  
+      subject_student = subject_student.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
+      content_student = content_student.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
+      sendmail(subject_student, content_student, receivers_student);
 
     } catch (ex) {
       console.log("寄信失敗! \n" + (ex));
