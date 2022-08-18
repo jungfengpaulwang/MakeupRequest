@@ -12,7 +12,7 @@ export class AppComponent implements OnInit {
   modalRef: NgbModalRef | undefined;
   @ViewChild('alertModal') alertModal: NgbModalRef | undefined;
   @ViewChild('revokeModal') revokeModal: NgbModalRef | undefined;
-  
+
   currentSemester: any;
   studentContract: any;
 
@@ -183,24 +183,36 @@ export class AppComponent implements OnInit {
   }
 
   async revoke(section: any) {
-    let closeResult = '';
+    const m = new Date();
+    const dateString = m.getFullYear() +"/"+ (m.getMonth()+1) +"/"+ m.getDate() + " " + m.getHours() + ":" + m.getMinutes() + ":" + m.getSeconds();
     this.modalService.open(this.revokeModal, {
       backdrop: 'static',
       keyboard: false,
       size: 'sm',
       centered: true
-    }).result.then(async (result) => {
+    }).result.then(async () => {
       let request = { Request: {
+        CancelDateTime: dateString,
         SchoolYear: this.currentSemester.SchoolYear,
         Semester: this.currentSemester.Semester,
         RefCourseID: section.RefCourseID,
         RefSectionID: section.RefSectionID,}};
       let rsp = await this.studentContract.send('RevokeMakeup', request);
+      this.sendRevokeMail(request);
       this.getMakeupRequest();
       this.getMyCourse();
-    }, (reason) => {
+    }, () => {
       ;
     });;
+  }
+
+  //  寄申請信
+  async sendRevokeMail(sections: any) {
+    try{
+
+    } catch (ex) {
+      console.log("寄信失敗! \n" + (ex));
+    }
   }
 
   //  送出申請
@@ -245,14 +257,14 @@ export class AppComponent implements OnInit {
       return;
     }
     let rsp = await this.studentContract.send('SetRequest', request);
-    this.sendMail(request.Request.Sections);
+    this.sendRequestMail(request.Request.Sections);
     this.getMakeupRequest();
     this.getMyCourse();
     this.modalRef?.close();
   }
 
-  //  寄信
-  async sendMail(sections: any) {
+  //  寄申請信
+  async sendRequestMail(sections: any) {
     try{
       let semester = '';
       if (this.currentSemester.Semester == 0) semester = '夏季學期';
@@ -350,7 +362,7 @@ export class AppComponent implements OnInit {
         index += 1;
       });
 
-      //  先寄補課申請行政人員通知信      
+      //  先寄補課申請行政人員通知信
       subject_manager = subject_manager.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
       content_manager = content_manager.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
       sendmail(subject_manager, content_manager, receivers_manager);
@@ -365,7 +377,7 @@ export class AppComponent implements OnInit {
       });
       */
 
-      //  再寄補課申請學生通知信  
+      //  再寄補課申請學生通知信
       subject_student = subject_student.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
       content_student = content_student.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
       sendmail(subject_student, content_student, receivers_student);
