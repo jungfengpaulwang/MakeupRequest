@@ -72,7 +72,6 @@
             <table class="table table-bordered rwd-table mt-3">
                 <thead class="table-light">
                     <tr>
-                        <!--<th></th>-->
                         <th>開課班次</th>
                         <th>課程名稱</th>
                         <th><span style="color: red;">*</span>申請補課時間</th>
@@ -86,8 +85,8 @@
                           <div *ngFor="let section of myCourse.CourseSections index as j;">
                             <div *ngIf="course.CourseID==section.RefCourseID">
                               <div class="form-check form-check-inline">
-                                  <input *ngIf="!((section.Status && section.Cancel!='t') || CompareNow(section.StartTime) || getMakeupCount(course)<=0)" class="form-check-input" type="checkbox" id="{{'sectionCheckbox-' + section.SectionID}}" value="{{section.SectionID}}" (click)="sectionChange($event, course, section)" style="cursor: pointer;">
-                                  <label [style.color]="((section.Status && section.Cancel!='t') || CompareNow(section.StartTime) || getMakeupCount(course)<=0) ? 'rgb(172, 176, 180)' : 'black'" class="form-check-label" for="{{'sectionCheckbox-' + section.SectionID}}" style="cursor: pointer;">{{section.StartTime}}
+                                  <input *ngIf="!((section.Status && section.Cancel!='t') || CompareNow(section.StartTime) || getMakeupCount(course)<=0 || section.isMakeup)" class="form-check-input" type="checkbox" id="{{'sectionCheckbox-' + section.SectionID}}" value="{{section.SectionID}}" (click)="sectionChange($event, course, section)" style="cursor: pointer;">
+                                  <label [style.color]="((section.Status && section.Cancel!='t') || CompareNow(section.StartTime) || getMakeupCount(course)<=0 || section.isMakeup) ? 'rgb(172, 176, 180)' : 'black'" class="form-check-label" for="{{'sectionCheckbox-' + section.SectionID}}" style="cursor: pointer;">{{section.RequestDateTime}}
                                     <container-element *ngIf="section.Cancel!='t'" [ngSwitch]="section.Status">
                                       <span *ngSwitchCase="-1" style="color: #084298;">(審核中)</span>
                                       <span *ngSwitchCase="'0'" style="color: #842029;">(審核不通過)</span>
