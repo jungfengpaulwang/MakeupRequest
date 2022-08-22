@@ -1,6 +1,15 @@
-import { Component, OnInit, ChangeDetectorRef, Input, Output, EventEmitter, HostListener, Renderer2, ViewChild } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, Input, Output, EventEmitter, HostListener, Renderer2, ViewChild, Pipe, PipeTransform } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 import { NgbModalConfig, NgbActiveModal, NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { GadgetService } from "./gadget.service";
+
+@Pipe({ name: 'safeHtml'})
+export class SafeHtmlPipe implements PipeTransform  {
+  constructor(private sanitized: DomSanitizer) {}
+  transform(value: string) {
+    return this.sanitized.bypassSecurityTrustHtml(value);
+  }
+}
 
 @Component({
   selector: 'app-root',
@@ -288,7 +297,7 @@ export class AppComponent implements OnInit {
           type: 'to',
         });
       });
-      const requestDateTime = section.RequestDateTime;      
+      const requestDateTime = section.RequestDateTime;
       const reason = section.Reason;
       const className = section.ClassName;
       const subjectName = section.SubjectName;

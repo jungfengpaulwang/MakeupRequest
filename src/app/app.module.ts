@@ -4,11 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 
 import { GadgetService } from "./gadget.service";
-import { AppComponent } from './app.component';
+import { AppComponent, SafeHtmlPipe } from './app.component';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent, SafeHtmlPipe
   ],
   imports: [
     BrowserModule,
