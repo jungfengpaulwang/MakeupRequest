@@ -1,4 +1,5 @@
 import { Injectable, NgZone } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Injectable()
 export class GadgetService {
@@ -12,6 +13,26 @@ export class GadgetService {
   public async getContract(contractName: string): Promise<Contract> {
 
     const contract = gadget.getContract(contractName);
+
+    return new Promise<any>((r, j) => {
+      contract.ready(() => {
+        r(new Contract(contract, this.zone));
+      });
+
+      contract.loginFailed((err: any) => {
+        j(err);
+      });
+    });
+  }
+
+  /**
+   * 連接指定之 dsns 與 contract。
+   * @param contractName 名稱。
+   */
+  public async Connect(dsns: string, contractName: string): Promise<Contract> {
+    if (!dsns.endsWith('/')) dsns += '/';
+
+    const contract = gadget.connect(dsns + contractName);
 
     return new Promise<any>((r, j) => {
       contract.ready(() => {
@@ -65,3 +86,11 @@ export class Contract {
     return this.contract.getAccessPoint();
   }
 }
+
+// var allowDSA = { connA: false, connB: false };
+// var connA = gadget.connect('https://1admin-ap.ischool.com.tw/dsa4/chhs.hcc.edu.tw/chhs.teacher.service');
+// connA.ready(function(){allowDSA.connA=true;});
+// connA.loginFailed(function(){allowDSA.connA=false;});
+// var connB = gadget.connect('https://1admin-ap.ischool.com.tw/dsa4/j.chhs.hcc.edu.tw/chhs.teacher.service');
+// connB.ready(function(){allowDSA.connB=true;});
+// connB.loginFailed(function(){allowDSA.connB=false;});
