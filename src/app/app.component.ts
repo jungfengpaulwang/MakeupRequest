@@ -45,7 +45,10 @@ export class AppComponent implements OnInit {
     }, 1);
   }
 
-  openModal(content: any) {
+  async openModal(content: any) {
+    await this.getSchoolYear();
+    await this.getMyCourse();
+    await this.getMakeupRequest();
     Object.keys(this.courseModal).forEach((CourseID: string) => {
       Object.keys(this.courseModal[CourseID]).forEach((SectionID: string) => {
         if (this.courseModal[CourseID][SectionID].Selected) {
@@ -75,7 +78,6 @@ export class AppComponent implements OnInit {
     await this.getSchoolYear();
     this.getSystemMessage();
     this.getMakeupMessage();
-    this.getMyCourse();
     this.getMakeupRequest();
   }
 
@@ -84,14 +86,23 @@ export class AppComponent implements OnInit {
     value = isNaN(value) ? 0 : value;
     value++;
     (element as HTMLInputElement).value = value + '';
+    this.currentSemester.SchoolYear = value;
+    this.getMakeupRequest();
   }
-  
+
   decreaseValue(element: any): void {
     var value = parseInt((element as HTMLInputElement).value, 10);
     value = isNaN(value) ? 0 : value;
     value < 1 ? value = 1 : '';
     value--;
     (element as HTMLInputElement).value = value + '';
+    this.currentSemester.SchoolYear = value;
+    this.getMakeupRequest();
+  }
+
+  changeCurrentSemester(semester: any): void {
+    this.currentSemester.Semester = semester;
+    this.getMakeupRequest();
   }
 
   numberOnly(event: any): boolean {
@@ -147,7 +158,7 @@ export class AppComponent implements OnInit {
         this.courseModal[course.CourseID].Selected = false;
         this.courseModal[course.CourseID].Course = course;
       });
-      
+
       rsp = await this.studentContract.send('GetCourseSection', request);
       if (rsp && rsp.Response) {
         this.myCourse.CourseSections = [].concat(rsp.Response);

@@ -6,20 +6,27 @@
   </nav>
   <div class="alert alert-info" role="alert" [innerHTML]="systemMessage | safeHtml"></div>
   <div class="d-flex align-items-center">
-      <h5 class="mb-0"> 
-        <form style="display: inline-flex;">
-          <div class="value-button" id="decrease" (click)="decreaseValue(school_year)" value="Decrease Value">-</div>
-          <input type="number" id="number" value="{{currentSemester?.SchoolYear}}" #school_year (keypress)="numberOnly($event)"/>
-          <div class="value-button" id="increase" (click)="increaseValue(school_year)" value="Increase Value">+</div>
-        </form>
-        學年度
-        <container-element [ngSwitch]="currentSemester?.Semester">
-          <span *ngSwitchCase="0">夏季學期</span>
-          <span *ngSwitchCase="1">第1學期</span>
-          <span *ngSwitchCase="2">第2學期</span>
-       </container-element>
+      <h5 class="mb-0">
       </h5>
       <button type="button" class="btn btn-primary my-3 ms-auto" (click)="openModal(lessonsForm)"><i class="fas fa-plus text-white"></i> 填寫補課申請表</button>
+  </div>
+  <div style="flex-wrap: nowrap;" class="btn-toolbar mb-3" role="toolbar" aria-label="Toolbar with button groups">
+    <div class="input-group">
+      <div class="input-group-text btn btn-primary" (click)="decreaseValue(school_year)">-</div>
+      <input style="max-width: 60px;" maxlength="3" type="text" class="form-control" placeholder="Input group example" aria-label="" aria-describedby="btnGroupAddon" value="{{currentSemester?.SchoolYear}}" #school_year (keypress)="numberOnly($event)">
+      <div class="input-group-text btn btn-primary" (click)="increaseValue(school_year)">+</div>
+      <div class="input-group-text" style="background: white; ">學年度</div>&nbsp;&nbsp;&nbsp;&nbsp;
+    </div>
+    <div class="input-group">
+      <div class="btn-group" role="group" aria-label="Small radio toggle button group">
+        <input type="radio" class="btn-check" name="btnradio" id="btnradio0" autocomplete="off" [checked]="currentSemester?.Semester==0" (click)="changeCurrentSemester(0);">
+        <label class="btn btn-outline-primary" for="btnradio0">夏季學期</label>
+        <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" [checked]="currentSemester?.Semester==1" (click)="changeCurrentSemester(1);">
+        <label class="btn btn-outline-primary" for="btnradio1">第1學期</label>
+        <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" [checked]="currentSemester?.Semester==2" (click)="changeCurrentSemester(2);">
+        <label class="btn btn-outline-primary" for="btnradio2">第2學期</label>
+      </div>
+    </div>
   </div>
 
   <table class="table table-bordered rwd-table mt-3">
@@ -78,7 +85,7 @@
               </h2>
             </div>
           </div>
-          
+
             <div class="collapse show mb-3" id="collapseExample">
               <div class="card card-body" [innerHTML]="makeupMessage | safeHtml"></div>
             </div>
