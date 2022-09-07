@@ -6,7 +6,13 @@
   </nav>
   <div class="alert alert-info" role="alert" [innerHTML]="systemMessage | safeHtml"></div>
   <div class="d-flex align-items-center">
-      <h5 class="mb-0">{{currentSemester?.SchoolYear}} 學年度
+      <h5 class="mb-0"> 
+        <form style="display: inline-flex;">
+          <div class="value-button" id="decrease" (click)="decreaseValue(school_year)" value="Decrease Value">-</div>
+          <input type="number" id="number" value="{{currentSemester?.SchoolYear}}" #school_year (keypress)="numberOnly($event)"/>
+          <div class="value-button" id="increase" (click)="increaseValue(school_year)" value="Increase Value">+</div>
+        </form>
+        學年度
         <container-element [ngSwitch]="currentSemester?.Semester">
           <span *ngSwitchCase="0">夏季學期</span>
           <span *ngSwitchCase="1">第1學期</span>
@@ -63,10 +69,17 @@
             <button type="button" class="btn-close" aria-label="Close" (click)="closeModal();"></button>
         </div>
         <div class="modal-body">
-            <a class="btn btn-primary mb-3" data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
-                補課說明
-            </a>
-            <div class="collapse mb-3" id="collapseExample">
+          <div class="accordion accordion-flush" id="accordionFlushExample">
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="flush-headingOne">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                  補課說明
+                </button>
+              </h2>
+            </div>
+          </div>
+          
+            <div class="collapse show mb-3" id="collapseExample">
               <div class="card card-body" [innerHTML]="makeupMessage | safeHtml"></div>
             </div>
             <table class="table table-bordered rwd-table mt-3">

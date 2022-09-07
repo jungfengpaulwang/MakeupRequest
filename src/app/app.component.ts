@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef, Input, Output, EventEmitter, HostListener, Renderer2, ViewChild, Pipe, PipeTransform } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { NgbModalConfig, NgbActiveModal, NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModalConfig, NgbActiveModal, NgbModal, NgbModalRef, NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
 import { GadgetService } from "./gadget.service";
 
 @Pipe({ name: 'safeHtml'})
@@ -15,7 +15,7 @@ export class SafeHtmlPipe implements PipeTransform  {
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css',],
-  providers: [NgbModalConfig, NgbModal, NgbActiveModal],
+  providers: [NgbModalConfig, NgbModal, NgbActiveModal, NgbCollapse],
 })
 export class AppComponent implements OnInit {
   modalRef: NgbModalRef | undefined;
@@ -33,6 +33,7 @@ export class AppComponent implements OnInit {
   currentReason: string = '';
   alertModalMessage: string = '';
   now: Date = new Date();
+  public isCollapsed = false;
 
   constructor(private gadgetService: GadgetService, private modalService: NgbModal, private config: NgbModalConfig, ) {
     // config.backdrop = 'static';
@@ -78,6 +79,30 @@ export class AppComponent implements OnInit {
     this.getMakeupRequest();
   }
 
+  increaseValue(element: any): void {
+    var value = parseInt((element as HTMLInputElement).value, 10);
+    value = isNaN(value) ? 0 : value;
+    value++;
+    (element as HTMLInputElement).value = value + '';
+  }
+  
+  decreaseValue(element: any): void {
+    var value = parseInt((element as HTMLInputElement).value, 10);
+    value = isNaN(value) ? 0 : value;
+    value < 1 ? value = 1 : '';
+    value--;
+    (element as HTMLInputElement).value = value + '';
+  }
+
+  numberOnly(event: any): boolean {
+    const charCode = (event.which) ? event.which : event.keyCode;
+    if (charCode >= 48 && charCode <= 57) {
+      return true;
+    }
+    return false;
+
+  }
+
   //  當前學年度學期
   async getSchoolYear() {
     try {
@@ -114,14 +139,19 @@ export class AppComponent implements OnInit {
       let request = { Request: {}};
       request.Request = {SchoolYear: this.currentSemester.SchoolYear, Semester: this.currentSemester.Semester};
       let rsp = await this.studentContract.send('GetCurrentCourse', request);
-      this.myCourse.Courses = [].concat(rsp.Result.Course);
+      if (rsp && rsp.Result && rsp.Result.Course) {
+        this.myCourse.Courses = [].concat(rsp.Result.Course);
+      }
       this.myCourse.Courses.forEach((course: any) => {
         this.courseModal[course.CourseID] = {};
         this.courseModal[course.CourseID].Selected = false;
         this.courseModal[course.CourseID].Course = course;
       });
+      
       rsp = await this.studentContract.send('GetCourseSection', request);
-      this.myCourse.CourseSections = [].concat(rsp.Response);
+      if (rsp && rsp.Response) {
+        this.myCourse.CourseSections = [].concat(rsp.Response);
+      }
       this.myCourse.CourseSections.forEach((section: any) => {
         section.RequestDateTime = section.StartTime.substr(0, 16) + "~" + section.EndTime.substr(11, 5);
         if (this.courseModal[section.RefCourseID] !== undefined) {
