@@ -23,6 +23,7 @@ export class AppComponent implements OnInit {
   @ViewChild('revokeModal') revokeModal: NgbModalRef | undefined;
 
   currentSemester: any;
+  backupSemester: any;
   studentContract: any;
 
   myCourse: any = { Courses: [], CourseSections: []};
@@ -46,6 +47,7 @@ export class AppComponent implements OnInit {
   }
 
   async openModal(content: any) {
+    this.backupSemester = {SchoolYear: this.currentSemester.SchoolYear, Semester: this.currentSemester.Semester};
     await this.getSchoolYear();
     await this.getMyCourse();
     await this.getMakeupRequest();
@@ -65,6 +67,8 @@ export class AppComponent implements OnInit {
   }
 
   closeModal() {
+    this.currentSemester = {SchoolYear: this.backupSemester.SchoolYear, Semester: this.backupSemester.Semester};
+    this.getMakeupRequest();
     this.modalRef?.close();
   }
 
