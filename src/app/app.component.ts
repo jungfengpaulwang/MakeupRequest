@@ -308,8 +308,14 @@ export class AppComponent implements OnInit {
 
       //  學生姓名
       let studentName = '';
+      let studentClassName = '';
+      let studentNumber = '';
       rsp = await this.studentContract.send('GetMyInfo');
-      if (rsp && rsp.Result) studentName = rsp.Result.Name;
+      if (rsp && rsp.Result) {
+        studentName = rsp.Result.Name;
+        studentClassName = rsp.Result.ClassName;
+        studentNumber = rsp.Result.StudentNumber;
+      }
 
       //  撤銷補課申請審核人員通知信樣版
       rsp = await this.studentContract.send('GetConfiguration', {ConfName: 'MakeupRevokeManagerEmailTemplate_subject'});
@@ -353,8 +359,8 @@ export class AppComponent implements OnInit {
       courseInfo += `<tr><td>${className}</td><td>${subjectName}</td><td>${makeupTime}</td></tr>`;
 
       //  先寄撤銷補課申請審核人員通知信
-      subject_manager = subject_manager.replaceAll('[[申請補課撤銷時間]]', cancelTime).replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
-      content_manager = content_manager.replaceAll('[[申請補課撤銷時間]]', cancelTime).replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
+      subject_manager = subject_manager.replaceAll('[[申請補課撤銷時間]]', cancelTime).replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[教學分班]]', studentClassName).replaceAll('[[學號]]', studentNumber).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
+      content_manager = content_manager.replaceAll('[[申請補課撤銷時間]]', cancelTime).replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[教學分班]]', studentClassName).replaceAll('[[學號]]', studentNumber).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
       sendmail(subject_manager, content_manager, receivers_manager);
 
       /*
@@ -368,8 +374,8 @@ export class AppComponent implements OnInit {
       */
 
       //  再寄撤銷補課申請學生通知信
-      subject_student = subject_student.replaceAll('[[申請補課撤銷時間]]', cancelTime).replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
-      content_student = content_student.replaceAll('[[申請補課撤銷時間]]', cancelTime).replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
+      subject_student = subject_student.replaceAll('[[申請補課撤銷時間]]', cancelTime).replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[教學分班]]', studentClassName).replaceAll('[[學號]]', studentNumber).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
+      content_student = content_student.replaceAll('[[申請補課撤銷時間]]', cancelTime).replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[教學分班]]', studentClassName).replaceAll('[[學號]]', studentNumber).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
       sendmail(subject_student, content_student, receivers_student);
 
     } catch (ex) {
@@ -468,8 +474,14 @@ export class AppComponent implements OnInit {
 
       //  學生姓名
       let studentName = '';
+      let studentClassName = '';
+      let studentNumber = '';
       rsp = await this.studentContract.send('GetMyInfo');
-      if (rsp && rsp.Result) studentName = rsp.Result.Name;
+      if (rsp && rsp.Result) {
+        studentName = rsp.Result.Name;
+        studentClassName = rsp.Result.ClassName;
+        studentNumber = rsp.Result.StudentNumber;
+      }
 
       //  補課申請審核人員通知信樣版
       rsp = await this.studentContract.send('GetConfiguration', {ConfName: 'MakeupRequestManagerEmailTemplate_subject'});
@@ -525,8 +537,8 @@ export class AppComponent implements OnInit {
       });
 
       //  先寄補課申請審核人員通知信
-      subject_manager = subject_manager.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
-      content_manager = content_manager.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
+      subject_manager = subject_manager.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[教學分班]]', studentClassName).replaceAll('[[學號]]', studentNumber).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
+      content_manager = content_manager.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[教學分班]]', studentClassName).replaceAll('[[學號]]', studentNumber).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
       sendmail(subject_manager, content_manager, receivers_manager);
 
       /*
@@ -540,8 +552,8 @@ export class AppComponent implements OnInit {
       */
 
       //  再寄補課申請學生通知信
-      subject_student = subject_student.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
-      content_student = content_student.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
+      subject_student = subject_student.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[教學分班]]', studentClassName).replaceAll('[[學號]]', studentNumber).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
+      content_student = content_student.replaceAll('[[學年度]]', this.currentSemester.SchoolYear).replaceAll('[[學期]]', semester).replaceAll('[[教學分班]]', studentClassName).replaceAll('[[學號]]', studentNumber).replaceAll('[[學生姓名]]', studentName).replaceAll('[[申請時間]]', requestDateTime).replaceAll('[[申請補課原因]]', reason).replaceAll('[[申請補課內容]]', courseInfo);
       sendmail(subject_student, content_student, receivers_student);
 
     } catch (ex) {
