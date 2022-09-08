@@ -13,7 +13,7 @@
   <div style="flex-wrap: nowrap;" class="btn-toolbar mb-3" role="toolbar" aria-label="Toolbar with button groups">
     <div class="input-group">
       <div class="input-group-text btn btn-primary" (click)="decreaseValue(school_year)">-</div>
-      <input style="max-width: 60px;" maxlength="3" type="text" class="form-control" placeholder="Input group example" aria-label="" aria-describedby="btnGroupAddon" value="{{currentSemester?.SchoolYear}}" #school_year (keypress)="numberOnly($event)">
+      <input style="max-width: 60px; min-width: 60px;" maxlength="3" type="text" class="form-control" placeholder="Input group example" aria-label="" aria-describedby="btnGroupAddon" value="{{currentSemester?.SchoolYear}}" #school_year (keypress)="numberOnly($event)">
       <div class="input-group-text btn btn-primary" (click)="increaseValue(school_year)">+</div>
       <div class="input-group-text" style="background: white; ">學年度</div>&nbsp;&nbsp;&nbsp;&nbsp;
     </div>
