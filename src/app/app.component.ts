@@ -85,6 +85,12 @@ export class AppComponent implements OnInit {
     this.getMakeupRequest();
   }
 
+  yearChange(event: any): void {
+    let value = event.target.value;
+    this.currentSemester.SchoolYear = value;
+    this.getMakeupRequest();
+  }
+
   increaseValue(element: any): void {
     var value = parseInt((element as HTMLInputElement).value, 10);
     value = isNaN(value) ? 0 : value;
@@ -115,7 +121,6 @@ export class AppComponent implements OnInit {
       return true;
     }
     return false;
-
   }
 
   //  當前學年度學期
